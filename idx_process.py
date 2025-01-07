@@ -4,7 +4,7 @@ import numpy as np
 import time
 import urllib
 from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
-from idx_utils import DATA_DIR, BASE_URL, create_headers
+from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BASE_URL, create_headers
 import warnings
 import urllib.request
 
@@ -44,7 +44,7 @@ def none_handling_operation(num1: float, num2: float, operation: str, none_to_ze
 
 # Combine scrapped data from the csv files
 def combine_technical_data ():
-  data_file_path = [os.path.join(DATA_DIR,f'idx_url_scrapped_list_P{i}.csv') for i in range(1,5)]
+  data_file_path = [os.path.join(DATA_IDX_URL_DIR,f'idx_url_scrapped_list_P{i}.csv') for i in range(1,5)]
 
   # Combine data
   all_data = pd.DataFrame()
@@ -57,6 +57,8 @@ def combine_technical_data ():
       all_data = pd.concat([all_data, df])
 
   return all_data
+
+
 
 # Call the API to download the Excel file data
 def download_excel_file(url: str, filename:str):
@@ -74,6 +76,8 @@ def download_excel_file(url: str, filename:str):
   except Exception as e:
     print(f"[FAILED] Failed to download excel file: {e}")
     return False
+
+
 
 # Main function to process the combined data (as a dataframe)
 def process_dataframe(df: pd.DataFrame, process: int = 1):
@@ -97,7 +101,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
       # # Download excel file
       # for _, row in curr_symbol_df.iterrows():
       #   # File name to be saved
-      #   filename = os.path.join(DATA_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+      #   filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
       #   url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
     
       #   # Make 3 attempts to download the file
@@ -118,7 +122,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
       # Check the industry of the company using the first row
       # Check the code of the Balance Sheet to determine the industry
       first_row = curr_symbol_df.iloc[0]
-      filename = os.path.join(DATA_DIR, f"{first_row['symbol']}_{first_row['year']}_{first_row['period']}.xlsx")
+      filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{first_row['symbol']}_{first_row['year']}_{first_row['period']}.xlsx")
       industry_key_idx = None
       for key, dict_val in UNIVERSAL_MAPPING.items():
         mapping_dict = dict_val
@@ -150,7 +154,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
 
           # # Delete the excel file if the data has been processed
-          # filename = os.path.join(DATA_DIR, f"{symbol}_{row['year']}_{row['period']}.xlsx")
+          # filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{row['year']}_{row['period']}.xlsx")
           # os.remove(filename)
 
         # Further handling for quarter data
@@ -174,12 +178,12 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
   # # Save quarter data
   # dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-  # filename_store_quarter = os.path.join(DATA_DIR, f"idx_result_data_quarter_P{process}.csv")
+  # filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
   # dataframe_quarter.to_csv(filename_store_quarter, index = False)   
 
   # # Save annual data
   # dataframe_annual = pd.DataFrame(result_data_list_annual)
-  # filename_store_annual = os.path.join(DATA_DIR, f"idx_result_data_annual_P{process}.csv")
+  # filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
   # dataframe_annual.to_csv(filename_store_annual, index = False)   
   # print(f"[COMPLETED] The file data has been stored in {filename_store_annual} and {filename_store_quarter}")
 
@@ -193,6 +197,8 @@ def open_excel_file(filename: str, sheetname: str):
     print(f'[WRONG FILE/ SHEET] Failed to open file {filename}: {e}')
     return None
   
+
+
 
 # Checking the first sheet => Information Sheet of the excel
 # Return the rounding level if success, otherwise None
@@ -217,6 +223,8 @@ def check_information_sheet(filename: str):
     return None
 
 
+
+
 # Used to get the data value where the column name is contained within the list
 def sum_value_equal(df : pd.DataFrame, column_list: list, rounding_val : float):
   result_val = None
@@ -226,6 +234,8 @@ def sum_value_equal(df : pd.DataFrame, column_list: list, rounding_val : float):
       result_val = none_handling_operation(result_val, data_val, "+", True)
 
   return result_val
+
+
 
 # Used to get the data value where the starting from column_start iterated to column_end, can be optionally specified to select only contains a certain key word
 # contain_keyword = None -> all column will be selected. contain_keyword != None -> only select column that contains the 'keyword'
@@ -255,6 +265,9 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
       break
 
   return result_val
+
+
+
 
 
 # Process balance sheet 
@@ -316,6 +329,8 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
 
 
 
+
+
 # Process income statement
 def process_income_statement(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Income Statement
@@ -372,6 +387,8 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 
 
 
+
+
 # Process cash flow
 def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Cash flow
@@ -407,6 +424,9 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
     print(f"[FAILED] Failed to process Cash Flow data of {filename}: {e}")
     return None
 
+
+
+
 # Change period and year to date format
 def date_format (period: str, year: str):
   # period value = ['tw1', 'tw2', 'tw3', 'tw4']
@@ -418,10 +438,14 @@ def date_format (period: str, year: str):
   }
   return f"{str(year)}{period_map[period]}"
 
+
+
+
+
 def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
   try:
     # File name to be saved
-    filename = os.path.join(DATA_DIR, f"{symbol}_{year}_{period}.xlsx")
+    filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{year}_{period}.xlsx")
 
     # Check Information Sheet
     rounding_val = check_information_sheet(filename)

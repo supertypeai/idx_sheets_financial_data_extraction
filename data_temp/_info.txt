@@ -1,0 +1,1 @@
+Contains manually download files. Only for exploration and experimental reason. Not used by the program
