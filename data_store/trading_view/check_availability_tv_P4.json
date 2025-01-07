@@ -1,0 +1,583 @@
+{
+  "HBAT.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "GLOB.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "JKSW.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "NTBK.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "KDTN.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "TALF.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "PANR.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "GDYR.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MBTO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "KOBX.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "ITIC.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "BBSS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "BMBL.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "BAUT.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "SIMA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "IPAC.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "DGNS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "OILS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "RIMO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "OKAS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "OPMS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "SNLK.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "PEGE.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "ICON.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "NELY.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "PAMG.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "REAL.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "SEMA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "WICO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "BAYU.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "WOWS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "PTDU.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "NZIA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "OASA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MGLV.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "CAKK.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "AKSI.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "TRUK.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "UANG.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "LFLO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "UVCR.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "VAST.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "VOKS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "IKPM.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "VRNA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "WGSH.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "WIFI.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "YELO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "ZONE.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "UDNG.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "INCF.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MPOW.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "INDO.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "RSCH.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "HAJJ.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "KING.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MUTU.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "ISAP.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "GRPM.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "PPRI.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "RELF.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MAXI.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MENN.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "TAYS.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "AMMS.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "IOTF.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "PMMP.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "LABA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "BESS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "GTRA.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "TOYS.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "ELIT.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "CRSN.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "AEGS.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "SICO.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "FOLK.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "WINR.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "GRIA.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "GULA.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "WIDI.JK": {
+    "income_statement_annual": true,
+    "income_statement_quarter": true,
+    "balance_sheet_quarter": true,
+    "cash_flow_quarter": true,
+    "is_data_complete": true
+  },
+  "MSIE.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "PADA.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  },
+  "PTPS.JK": {
+    "income_statement_annual": false,
+    "income_statement_quarter": false,
+    "balance_sheet_quarter": false,
+    "cash_flow_quarter": false,
+    "is_data_complete": false
+  }
+}
