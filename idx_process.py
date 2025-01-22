@@ -7,6 +7,7 @@ from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
 from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BASE_URL, create_headers
 import warnings
 import urllib.request
+import openpyxl as xl 
 
 warnings.simplefilter(action='ignore', category=UserWarning)
 
@@ -119,22 +120,14 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
     
       #   time.sleep(1)
 
-      # Check the industry of the company using the first row
+      # Check the industry of the company the code of the balance sheet
       # Check the code of the Balance Sheet to determine the industry
       first_row = curr_symbol_df.iloc[0]
       filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{first_row['symbol']}_{first_row['year']}_{first_row['period']}.xlsx")
-      industry_key_idx = None
-      for key, dict_val in UNIVERSAL_MAPPING.items():
-        mapping_dict = dict_val
-        sheet_code_list = mapping_dict['bs_sheet_code']
-        for sheet_name in sheet_code_list:
-          temp_df = open_excel_file(filename, sheet_name)
-          if (temp_df is not None):
-            industry_key_idx = key
-            break
-        if (industry_key_idx is not None):
-          # Industry_key_idx is not None indicates found
-          break
+      # Open work book, try to get the industry code
+      wb = xl.load_workbook(filename)
+      balance_sheet_code = wb.sheetnames[3]
+      industry_key_idx = int(balance_sheet_code[0])
 
       # Check if the industry is detected
       if (industry_key_idx is not None):
@@ -170,8 +163,6 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
         # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
 
       
-
-
     break # for testing
     # Incremental
     start_idx += range_idx
@@ -467,10 +458,9 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     result_dict.update(income_statement_data)
     result_dict.update(cash_flow_data) 
 
-    print(result_dict)
-    # # for printing only
-    # for k, v in result_dict.items():
-    #   print(f"[{k} => {v}]")
+    # for printing only
+    for k, v in result_dict.items():
+      print(f"\t[{k} => {v}]")
     
     return result_dict
   except Exception as e:
