@@ -11,14 +11,20 @@ ROUNDING_LEVEL_MAPPING = {
 }
 
 
+# MAPPING FORMAT 
+# DICT = {
+# [ENGLISH NAME IN IDX SHEETS]:  [NEW NAME]}
 
 # Mapping For General Industry
 # Only be used for data that can be directly selected, without calculation
 GENERAL_BALANCE_SHEET_SHEET_CODE = ['1210000', '1220000', '1310000']
 GENERAL_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total liabilities" : "total_liabilities",
   "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
   "Total non-current assets" : "total_non_current_assets",
@@ -36,6 +42,9 @@ GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
 GENERAL_CASH_FLOW_SHEET_CODE = ['1510000']
 GENERAL_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -45,9 +54,12 @@ GENERAL_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 PROPERTY_BALANCE_SHEET_SHEET_CODE = ['2210000']
 PROPERTY_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total liabilities" : "total_liabilities",
   "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
   "Total non-current assets" : "total_non_current_assets",
@@ -65,6 +77,9 @@ PROPERTY_INCOME_STATEMENT_COLUMN_MAPPING = {
 PROPERTY_CASH_FLOW_SHEET_CODE = ['2510000']
 PROPERTY_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -75,9 +90,12 @@ PROPERTY_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 INFRASTRUCTURE_BALANCE_SHEET_SHEET_CODE = ['3210000', '3220000']
 INFRASTRUCTURE_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total liabilities" : "total_liabilities",
   "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
   "Total non-current assets" : "total_non_current_assets",
@@ -95,6 +113,9 @@ INFRASTRUCTURE_INCOME_STATEMENT_COLUMN_MAPPING = {
 INFRASTRUCTURE_CASH_FLOW_SHEET_CODE = ['3510000']
 INFRASTRUCTURE_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -121,6 +142,9 @@ FINANCE_SHARIA_INCOME_STATEMENT_COLUMN_MAPPING = {
 FINANCE_SHARIA_CASH_FLOW_SHEET_CODE = ['4510000']
 FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -129,7 +153,11 @@ FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 SECURITIES_BALANCE_SHEET_SHEET_CODE = ['5220000']
 SECURITIES_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
+  "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
@@ -145,6 +173,9 @@ SECURITIES_INCOME_STATEMENT_COLUMN_MAPPING = {
 SECURITIES_CASH_FLOW_SHEET_CODE = ['5510000']
 SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -154,7 +185,11 @@ SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 INSURANCE_BALANCE_SHEET_SHEET_CODE = ['6220000']
 INSURANCE_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
+  "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
@@ -171,6 +206,9 @@ INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
 INSURANCE_CASH_FLOW_SHEET_CODE = ['6510000']
 INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
@@ -179,9 +217,12 @@ INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 FINANCING_BALANCE_SHEET_SHEET_CODE = ['8220000']
 FINANCING_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Total current assets" : "total_current_assets",
+  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total liabilities" : "total_liabilities",
   "Total current liabilities" : "total_current_liabilities",
+  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
   "Cash and cash equivalents" : "cash_only",
@@ -197,6 +238,9 @@ FINANCING_INCOME_STATEMENT_COLUMN_MAPPING = {
 FINANCING_CASH_FLOW_SHEET_CODE = ['8510000']
 FINANCING_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) operating activities" : "net_operating_cash_flow",
+  "Total net cash flows received from (used in) investing activities" : "net_investing_cash_flow",
+  "Total net cash flows received from (used in) financing activities" : "net_financing_cash_flow",
+  "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
 
 
