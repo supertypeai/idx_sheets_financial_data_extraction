@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import time
 import urllib
-from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
+from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING, BALANCE_SHEET_METRICS, INCOME_STATEMENT_METRICS, CASH_FLOW_METRICS
 from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BASE_URL, create_headers
 import warnings
 import urllib.request
@@ -237,6 +237,7 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
     # Only start process when find column_start and end process when find column_end
     if (row['Unnamed: 3'] == column_start):
       continue_process = True
+      starting_point = True
     if (continue_process):
       #  Check if the column contains the keyword if the contain_keyword is not None
       #  Default check_found = True
@@ -250,10 +251,14 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
       if (check_found):
         data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val)
         result_val = none_handling_operation(result_val, data_val, "+", True)
+      starting_point = False
       
-    if (row['Unnamed: 3'] == column_end):
+    if (row['Unnamed: 3'] == column_end and not starting_point):
       continue_process = False
       break
+
+  if (continue_process):
+    print(f'[ERROR] Column end {column_end} is not found!')
 
   return result_val
 
@@ -265,7 +270,11 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
 def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Balance Sheet
   try:
+    # Create dict using metrics template
     balance_sheet_dict = dict()
+    for metric in BALANCE_SHEET_METRICS:
+      balance_sheet_dict[metric] = None
+
     for sheet_name in sheet_code_list:
       df = open_excel_file(filename, sheet_name)
       if (df is not None):
@@ -276,38 +285,45 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
-          balance_sheet_dict[column_mapping[row['Unnamed: 3']]] = data_val
+          if (type(column_mapping[row['Unnamed: 3']])) == list:
+            for metric in column_mapping[row['Unnamed: 3']]:
+              balance_sheet_dict[metric] = data_val
+          else:
+            balance_sheet_dict[column_mapping[row['Unnamed: 3']]] == data_val
+          
           
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
-      if (industry_key_idx in [1, 2, 3]):
+      if (industry_key_idx == 1): # General
         balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
-        balance_sheet_dict['cash_only'] = None
-        balance_sheet_dict['total_cash_and_due_from_banks'] = None
+        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
 
-        if (industry_key_idx == 1):
-          total_debt = sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val)
-        else: # industry_key_idx in [2,3]
-          total_debt = sum_value_equal(df, ['Short term bank loans', 'Short-term non-bank loans'], rounding_val)
+      elif (industry_key_idx == 2): # Property
+        balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
+        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Short-term non-bank loans'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
 
-        total_debt = none_handling_operation(total_debt, sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val), "+", True)
-        total_debt = none_handling_operation(total_debt, sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val), "+", True)
-        balance_sheet_dict['total_debt'] = total_debt
-      else: #(industry_key_idx in [4, 5, 6, 8]):
-        balance_sheet_dict['total_current_liabilities'] = None
-        balance_sheet_dict['total_non_current_assets'] = None
+      elif (industry_key_idx == 3): # Infrastructure
+        balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
+        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Short-term non-bank loans'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
 
-        if (industry_key_idx in [5, 8]):
-          balance_sheet_dict['total_cash_and_due_from_banks'] = None
-          balance_sheet_dict['cash_and_short_term_investments'] = None # TO DO
-        else: # industry_key_idx in [4, 6]
-          balance_sheet_dict['total_cash_and_due_from_banks'] = None # TO DO
-          balance_sheet_dict['cash_and_short_term_investments'] = None
+      elif (industry_key_idx == 4): # Finance and Sharia
+        balance_sheet_dict['gross_loan'] = sum_value_equal(df, ['Loans third parties', 'Loans related parties'], rounding_val)
+        balance_sheet_dict['net_loan'] = balance_sheet_dict['gross_loan'] + balance_sheet_dict['allowance_for_loans']
+        balance_sheet_dict['non_loan_assets'] = balance_sheet_dict['total_assets'] - balance_sheet_dict['net_loan']
+        balance_sheet_dict['total_cash_and_due_from_banks'] = sum_value_equal(df, ['Cash', 'Current accounts with bank Indonesia'], rounding_val) + sum_value_range(df, "Current accounts with other banks", "Allowance for impairment losses for current accounts with other bank", rounding_val)
+        balance_sheet_dict['current_account'] = sum_value_range(df, 'Current accounts', "Current accounts related parties", rounding_val)
+        balance_sheet_dict['savings_account'] = sum_value_range(df, 'Savings', "Savings related parties", rounding_val)
+        balance_sheet_dict['time_deposits'] = sum_value_range(df, 'Time deposits', "Time deposits related parties", rounding_val)
+        balance_sheet_dict['total_deposits'] = balance_sheet_dict['current_account'] + balance_sheet_dict['savings_account'] + balance_sheet_dict['time_deposits']
 
-        if (industry_key_idx == 6):
-          balance_sheet_dict['total_debt'] = None
-        else: # industry_key_idx in [5, 7, 8]
-          balance_sheet_dict['total_debt'] = None # TO DO
+      elif (industry_key_idx == 5): # Securities
+        balance_sheet_dict['cash_only'] = sum_value_equal(df, ['Cash and cash equivalents', 'Restricted funds'], rounding_val)
+
+      elif (industry_key_idx == 6): # Insurance
+        'TODO: waiting unfinalized metrics'
+
+      else : # (industry_key_idx == 8): # Financing
+        'TODO: waiting unfinalized metrics'
 
       return balance_sheet_dict
     
@@ -326,7 +342,10 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
 def process_income_statement(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Income Statement
   try:
+    # Create dict using metrics template
     income_statement_dict = dict()
+    for metric in INCOME_STATEMENT_METRICS:
+      income_statement_dict[metric] = None
 
     for sheet_name in sheet_code_list:
       df = open_excel_file(filename, sheet_name)
@@ -337,34 +356,73 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
-          income_statement_dict[column_mapping[row['Unnamed: 3']]] = data_val
+          if (type(column_mapping[row['Unnamed: 3']])) == list:
+            for metric in column_mapping[row['Unnamed: 3']]:
+              income_statement_dict[metric] = data_val
+          else:
+            income_statement_dict[column_mapping[row['Unnamed: 3']]] == data_val
 
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
 
       # Additional handling for different industries
-      if (industry_key_idx in [1, 2, 3]):
-        income_statement_dict['interest_expense_non_operating'] = none_handling_operation(income_statement_dict['interest_expense_non_operating'], -1, "*", False)
+      if (industry_key_idx == 1): # General
+        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
+        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None # TO DO
+        income_statement_dict['ebitda'] = None #TODO
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
-        # Gross_income for industry 1 and 2 can be retrieved directly
-        if (industry_key_idx == 3):
-          income_statement_dict['gross_income'] = None # TO DO
+      elif (industry_key_idx == 2): # Property
+        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
+        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
+        income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
+        income_statement_dict['ebitda'] = None #TODO
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
-      else: # industry_key in [4, 5, 6, 8]
-        # Total_revenue for industry 6 and 8 can be retrieved directly
-        if (industry_key_idx == 4):
-          income_statement_dict['total_revenue'] = None # TO DO
-        elif (industry_key_idx == 5):
-          income_statement_dict['total_revenue'] = None # TO DO
-        income_statement_dict['interest_expense_non_operating'] = None
-        income_statement_dict['ebit'] = None
-        income_statement_dict['ebitda'] = None
+      elif (industry_key_idx == 3): # Infrastructure
+        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
+        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
+        income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
+        income_statement_dict['ebitda'] = None #TODO
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
-      # Additional handling for all industries
-      income_statement_dict['income_taxes'] = none_handling_operation(income_statement_dict['income_taxes'], -1, "*", False)
-      income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
+      elif (industry_key_idx == 4): # Finance and Sharia
+        income_statement_dict['net_interest_income'] = none_handling_operation(income_statement_dict['interest_income'], income_statement_dict['interest_expenses'], '+', False)
+        income_statement_dict['net_premium_income'] = none_handling_operation(income_statement_dict['premium_income'], income_statement_dict['premium_expenses'], '+', False)
+        income_statement_dict['non_interest_income'] = sum_value_range(df, 'Other operating income', "Other operating income", rounding_val)
+        income_statement_dict['total_revenue'] = none_handling_operation(none_handling_operation(income_statement_dict['net_interest_income'], income_statement_dict['net_premium_income'], '+', False), income_statement_dict['non_interest_income'], '+', False)
+        income_statement_dict['operating_expenses'] = sum_value_range(df, 'Other operating expenses', "Other operating expenses", rounding_val)
+        income_statement_dict['provision_for_impairment'] = sum_value_range(df, "Recovery of impairment loss", "Recovery of estimated loss of commitments and contingency", rounding_val) + sum_value_range(df, "Allowances for impairment losses", "Reversal (expense) of estimated losses on commitments and contingencies", rounding_val)
+        income_statement_dict['non_operating_income'] = sum_value_range(df, "Non-operating income and expense", "Share of profit (loss) of joint ventures accounted for using equity method", rounding_val)
+        income_statement_dict['net_income'] = none_handling_operation(sum_value_equal(df, ['Total profit (loss)']), income_statement_dict['minorities'], '+', True)
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
+
+      elif (industry_key_idx == 5): # Securities
+        income_statement_dict['total_revenue'] = sum_value_range(df, "Statement of profit or loss and other comprehensive income", "Gains (losses) on changes in fair value of marketable securities", rounding_val)
+        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = None #TODO
+        # income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False) 
+        income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
+        income_statement_dict['ebitda'] = None #TODO
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
+
+      elif (industry_key_idx == 6): # Insurance
+        'TODO: waiting unfinalized metrics'
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
+
+      else : # (industry_key_idx == 8): # Financing
+        'TODO: waiting unfinalized metrics'
+        income_statement_dict['operating_expenses'] = sum_value_range(df, "Selling expenses", "Other losses", rounding_val)
+        income_statement_dict['gross_income'] = none_handling_operation(income_statement_dict['non_operating_income'], income_statement_dict['operating_expenses'], "+", True)
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['non_operating_income'], "-", True)
+        income_statement_dict['total_revenue'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['cost_of_revenue'], "+", True)
+        income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
+        income_statement_dict['ebitda'] = None #TODO
+        income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       return income_statement_dict
     
@@ -384,7 +442,11 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Cash flow
   try:
+    # Create dict using metrics template
     cash_flow_dict = dict()
+    for metric in CASH_FLOW_METRICS:
+      cash_flow_dict[metric] = None
+
 
     for sheet_name in sheet_code_list:
       df = open_excel_file(filename, sheet_name)
@@ -395,7 +457,11 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
-          cash_flow_dict[column_mapping[row['Unnamed: 3']]] = data_val
+          if (type(column_mapping[row['Unnamed: 3']])) == list:
+            for metric in column_mapping[row['Unnamed: 3']]:
+              cash_flow_dict[metric] = data_val
+          else:
+            cash_flow_dict[column_mapping[row['Unnamed: 3']]] == data_val
       
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
@@ -438,6 +504,8 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     # File name to be saved
     filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{year}_{period}.xlsx")
 
+    print(f"[PROCESS] Processing {filename}...")
+
     # Check Information Sheet
     rounding_val = check_information_sheet(filename)
     mapping_dict = UNIVERSAL_MAPPING[industry_key_idx]
@@ -449,8 +517,11 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     }
 
     # Process each data
+    print(f"[BS] Processing Balance Sheet ...")
     balance_sheet_data = process_balance_sheet(filename, mapping_dict['bs_sheet_code'], mapping_dict['bs_column_mapping'], rounding_val, industry_key_idx)
+    print(f"[IS] Processing Income Statement ...")
     income_statement_data = process_income_statement(filename, mapping_dict['is_sheet_code'], mapping_dict['is_column_mapping'], rounding_val, industry_key_idx)
+    print(f"[CF] Processing Cash Flow ...")
     cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], rounding_val, industry_key_idx)
 
     # Update and combine dictionary
@@ -461,6 +532,8 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     # for printing only
     for k, v in result_dict.items():
       print(f"\t[{k} => {v}]")
+    
+    print(f'[SUCCESS] Successfully processed {filename}!')
     
     return result_dict
   except Exception as e:

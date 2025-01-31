@@ -10,6 +10,66 @@ ROUNDING_LEVEL_MAPPING = {
   "TRILIUNAN" : 1e12
 }
 
+BALANCE_SHEET_METRICS = ['gross_loan', 
+                         "allowance_for_loans",
+                         "net_loan",
+                         "non_loan_asset",
+                         "total_current_assets",
+                         "total_non_current_assets",
+                         "total_assets",
+                         "total_earning_assets",
+                         "cash_only",
+                         "total_cash_and_due_from_banks",
+                         "cash_and_short_term_investments",
+                         "current_account", 
+                         "savings_account", 
+                         "time_deposits",
+                         "total_deposits",
+                         "other_interest_bearing_liabilities",
+                         "non_interest_bearing_liabilities",
+                         "total_current_liabilities", 
+                         "total_non_current_liabilities", 
+                         "total_liabilities", 
+                         "total_equity",
+                         "total_debt", 
+                         "stockholders_equity"]
+
+INCOME_STATEMENT_METRICS = ["interest_income",
+                            "interest_expenses",
+                            "net_interest_income",
+                            "premium_income",
+                            "premium_expenses",
+                            "net_premium_income",
+                            "non_interest_income",
+                            "total_revenue",
+                            "cost_of_revenue",
+                            "gross_income",
+                            "operating_expenses",
+                            "provision_for_impairment",
+                            "operating_income",
+                            "non_operating_income",
+                            "pretax_income",
+                            "income_taxes",
+                            "minorities",
+                            "net_income",
+                            "interest_expense_non_operating",
+                            "ebit",
+                            "ebitda",
+                            "diluted_shares_outstanding"]
+
+CASH_FLOW_METRICS = ["total_high_quality_liquid_asset",
+                     "cash_outflow",
+                     "cash_inflow",
+                     "total_net_cash_outflow",
+                     "net_operating_cash_flow",
+                     "net_investing_cash_flow",
+                     "net_financing_cash_flow",
+                     "net_increased_decreased",
+                     "realized_capital_goods_investment"
+                     "capital_expenditure",
+                     "free_cash_flow"]
+
+
 
 # MAPPING FORMAT 
 # DICT = {
@@ -137,7 +197,7 @@ FINANCE_SHARIA_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Interest income" : "interest_income",
   "Interest expenses" : "interest_expenses",
   "Revenue from insurance premiums" : "premium_income",
-  "Claim expenses" : "premium_expense",
+  "Claim expenses" : "premium_expenses",
   "Total profit from operation" : "operating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
@@ -193,7 +253,7 @@ INSURANCE_BALANCE_SHEET_COLUMN_MAPPING = {
 INSURANCE_INCOME_STATEMENT_SHEET_CODE = ['6312000']
 INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Revenue from insurance premiums" : "total_revenue",
-  "Total profit (loss) from continuing operations" : "operating_income",
+  "Total profit (loss) from continuing operations" : "perating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
   "Total profit (loss)" : "net_income",
@@ -213,8 +273,7 @@ INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
 FINANCING_BALANCE_SHEET_SHEET_CODE = ['8220000']
 FINANCING_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total assets" : "total_assets",
-  "Cash and cash equivalents" : "cash_only",
-  "Cash and cash equivalents" : "cash_and_short_term_investments",
+  "Cash and cash equivalents" : ["cash_only", "cash_and_short_term_investments"],
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
@@ -223,9 +282,9 @@ FINANCING_BALANCE_SHEET_COLUMN_MAPPING = {
 FINANCING_INCOME_STATEMENT_SHEET_CODE = ['8312000', '8322000']
 FINANCING_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Interest and finance income" : "total_revenue",
+  "Provision for impairment losses" : "non_operating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-
   "Total profit (loss)" : "net_income",
   "Total profit (loss) from continuing operations" : "operating_income"
 }
