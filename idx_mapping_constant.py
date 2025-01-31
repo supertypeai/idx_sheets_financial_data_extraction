@@ -65,7 +65,7 @@ CASH_FLOW_METRICS = ["total_high_quality_liquid_asset",
                      "net_investing_cash_flow",
                      "net_financing_cash_flow",
                      "net_increased_decreased",
-                     "realized_capital_goods_investment"
+                     "realized_capital_goods_investment",
                      "capital_expenditure",
                      "free_cash_flow"]
 
@@ -91,7 +91,7 @@ GENERAL_BALANCE_SHEET_COLUMN_MAPPING = {
 GENERAL_INCOME_STATEMENT_SHEET_CODE = ['1311000', '1321000']
 GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Cost of sales and revenue" : "cost of revenue",
+  "Cost of sales and revenue" : "cost_of_revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
@@ -126,7 +126,7 @@ PROPERTY_BALANCE_SHEET_COLUMN_MAPPING = {
 PROPERTY_INCOME_STATEMENT_SHEET_CODE = ['2311000', '1321000']
 PROPERTY_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Cost of sales and revenue" : "cost of revenue",
+  "Cost of sales and revenue" : "cost_of_revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
@@ -162,7 +162,7 @@ INFRASTRUCTURE_BALANCE_SHEET_COLUMN_MAPPING = {
 INFRASTRUCTURE_INCOME_STATEMENT_SHEET_CODE = ['3311000', '3312000']
 INFRASTRUCTURE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Cost of sales and revenue" : "cost of revenue",
+  "Cost of sales and revenue" : "cost_of_revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",

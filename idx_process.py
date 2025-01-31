@@ -296,15 +296,21 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
       # Doing Calculations and Adjustments
       if (industry_key_idx == 1): # General
         balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
-        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
+        balance_sheet_dict['total_debt'] = none_handling_operation(
+          none_handling_operation(sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val),  sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val), "+", True), 
+          sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val), "+", True)
 
       elif (industry_key_idx == 2): # Property
         balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
-        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Short-term non-bank loans'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
+        balance_sheet_dict['total_debt'] = none_handling_operation(
+          none_handling_operation(sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val),  sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val), "+", True), 
+          sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val), "+", True)
 
       elif (industry_key_idx == 3): # Infrastructure
         balance_sheet_dict['cash_and_short_term_investments'] = sum_value_equal(df, ['Cash and cash equivalents', 'Short-term investments'], rounding_val)
-        balance_sheet_dict['total_debt'] = sum_value_equal(df, ['Short term bank loans', 'Short-term non-bank loans'], rounding_val) + sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val) + sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val)
+        balance_sheet_dict['total_debt'] = none_handling_operation(
+          none_handling_operation(sum_value_equal(df, ['Short term bank loans', 'Trust receipts payables'], rounding_val),  sum_value_range(df, "Current maturities of long-term liabilities", "Current maturities of other borrowings", rounding_val), "+", True), 
+          sum_value_range(df, "Long-term liabilities net of current maturities", "Long-term other borrowings", rounding_val), "+", True)
 
       elif (industry_key_idx == 4): # Finance and Sharia
         balance_sheet_dict['gross_loan'] = sum_value_equal(df, ['Loans third parties', 'Loans related parties'], rounding_val)
@@ -364,28 +370,26 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
-
-      # Additional handling for different industries
       if (industry_key_idx == 1): # General
         income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
-        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
+        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 2): # Property
         income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
-        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
+        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 3): # Infrastructure
         income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = income_statement_dict['gross_income'] + income_statement_dict['operating_expenses']
-        income_statement_dict['non_operating_income'] = income_statement_dict['pretax_income'] - income_statement_dict['operating_income']
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
+        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
@@ -436,8 +440,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 
 
 
-
-
 # Process cash flow
 def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
   # Cash flow
@@ -446,7 +448,6 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
     cash_flow_dict = dict()
     for metric in CASH_FLOW_METRICS:
       cash_flow_dict[metric] = None
-
 
     for sheet_name in sheet_code_list:
       df = open_excel_file(filename, sheet_name)
@@ -466,10 +467,15 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
       if (industry_key_idx in [1, 2, 3, 5, 6, 8]):
-        capital_expenditure = sum_value_range(df, "Cash flows from investing activities", "Other cash inflows (outflows) from investing activities", rounding_val, "Payments") 
-        cash_flow_dict['free_cash_flow'] = none_handling_operation(cash_flow_dict['net_operating_cash_flow'], capital_expenditure,"+", False)
-      else: # industry_key == 4
-        cash_flow_dict['free_cash_flow'] = None
+        cash_flow_dict['capital_expenditure'] = sum_value_range(df, "Cash flows from investing activities", "Other cash inflows (outflows) from investing activities", rounding_val, "Payments") 
+        cash_flow_dict['free_cash_flow'] = none_handling_operation(cash_flow_dict['net_operating_cash_flow'], cash_flow_dict['capital_expenditure'], "+", False)
+      else: # (industry_key == 4)
+        cash_flow_dict['total_high_quality_liquid_asset'] = None #TODO
+        cash_flow_dict['cash_outflow'] = None #TODO
+        cash_flow_dict['cash_inflow'] = None #TODO
+        cash_flow_dict['total_net_cash_outflow'] = None #TODO
+        cash_flow_dict['realized_capital_goods_investment'] = None #TODO
+        cash_flow_dict['total_net_cash_flow'] = None #TODO
 
       return cash_flow_dict
     
@@ -504,8 +510,6 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     # File name to be saved
     filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{year}_{period}.xlsx")
 
-    print(f"[PROCESS] Processing {filename}...")
-
     # Check Information Sheet
     rounding_val = check_information_sheet(filename)
     mapping_dict = UNIVERSAL_MAPPING[industry_key_idx]
@@ -515,6 +519,8 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
       "date" : date,
       "industry_code" : industry_key_idx
     }
+
+    print(f"[PROCESS] Processing {symbol} date {date} industry_key {industry_key_idx}...")
 
     # Process each data
     print(f"[BS] Processing Balance Sheet ...")
