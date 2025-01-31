@@ -5,17 +5,13 @@ from supabase import create_client
 from dotenv import load_dotenv
 import json
 import time
-from datetime import datetime
 import time
 from multiprocessing import Process
 from idx_process import combine_technical_data, process_dataframe
 from idx_scrape_url import fetch_url, get_data
 import sys
 
-
 load_dotenv()
-
-
 
 
 if __name__ == "__main__":
@@ -32,9 +28,9 @@ if __name__ == "__main__":
     year_arg = int(sys.argv[1])
 
   # Get the table
-  db_data = supabase.table("idx_active_company_profile").select("symbol").in_("current_source", [-1, 2]).execute()
+  db_data = supabase.table("idx_active_company_profile").select("symbol").execute()
   df_db_data = pd.DataFrame(db_data.data)
-  symbol_list : list = df_db_data['symbol'].unique().tolist()
+  symbol_list : list = df_db_data['symbol'].unique().tolist()[:12]
   print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
   length_list = len(symbol_list)
@@ -68,34 +64,37 @@ if __name__ == "__main__":
   scraping_duration = int(end_scraping-start)
   print(f"The scraping execution time: {time.strftime('%H:%M:%S', time.gmtime(scraping_duration))}")
 
-  # # Combine scrapped data
-  # all_data = combine_technical_data()
 
-  # # Use multiprocess to increase efficiency
-  # length_list = len(all_data)
-  # i1 = int(length_list / 4)
-  # i2 = 2 * i1
-  # i3 = 3 * i1
 
-  # # Process Program
-  # # [LOOK] idx_process.py
-  # p1 = Process(target=process_dataframe, args=(all_data[:i1], 1))
-  # p2 = Process(target=process_dataframe, args=(all_data[i1:i2], 2))
-  # p3 = Process(target=process_dataframe, args=(all_data[i2:i3], 3))
-  # p4 = Process(target=process_dataframe, args=(all_data[i3:], 4))
 
-  # p1.start()
-  # p2.start()
-  # p3.start()
-  # p4.start()
+  # Combine scrapped data
+  all_data = combine_technical_data()
 
-  # p1.join()
-  # p2.join()
-  # p3.join()
-  # p4.join()
+  # Use multiprocess to increase efficiency
+  length_list = len(all_data)
+  i1 = int(length_list / 4)
+  i2 = 2 * i1
+  i3 = 3 * i1
 
-  # # End time
-  # end_processing = time.time()
-  # processing_duration = int(end_processing-end_scraping)
-  # print(f"The processing execution time: {time.strftime('%H:%M:%S', time.gmtime(processing_duration))}")
+  # Process Program
+  # [LOOK] idx_process.py
+  p1 = Process(target=process_dataframe, args=(all_data[:i1], 1))
+  p2 = Process(target=process_dataframe, args=(all_data[i1:i2], 2))
+  p3 = Process(target=process_dataframe, args=(all_data[i2:i3], 3))
+  p4 = Process(target=process_dataframe, args=(all_data[i3:], 4))
+
+  p1.start()
+  p2.start()
+  p3.start()
+  p4.start()
+
+  p1.join()
+  p2.join()
+  p3.join()
+  p4.join()
+
+  # End time
+  end_processing = time.time()
+  processing_duration = int(end_processing-end_scraping)
+  print(f"The processing execution time: {time.strftime('%H:%M:%S', time.gmtime(processing_duration))}")
 

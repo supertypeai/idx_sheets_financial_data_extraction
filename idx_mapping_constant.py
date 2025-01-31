@@ -192,7 +192,7 @@ FINANCE_SHARIA_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
   "Cash" : "cash_only",
 }
-FINANCE_SHARIA_INCOME_STATEMENT_SHEET_CODE = ['4322000']
+FINANCE_SHARIA_INCOME_STATEMENT_SHEET_CODE = ['4322000', '4312000']
 FINANCE_SHARIA_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Interest income" : "interest_income",
   "Interest expenses" : "interest_expenses",
@@ -222,7 +222,7 @@ SECURITIES_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
 }
-SECURITIES_INCOME_STATEMENT_SHEET_CODE = ['5311000']
+SECURITIES_INCOME_STATEMENT_SHEET_CODE = ['5311000', '5321000']
 SECURITIES_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",

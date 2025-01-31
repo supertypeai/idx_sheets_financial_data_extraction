@@ -4,6 +4,7 @@ import json
 import time
 import pandas as pd
 import os
+from datetime import datetime
 
 def fetch_url(period: str, symbol: str, year: str, process: int):
   # period = ["tw1", "tw2", "tw3", "audit"]

@@ -50,12 +50,15 @@ def combine_technical_data ():
   # Combine data
   all_data = pd.DataFrame()
   for i in range(len(data_file_path)):
-    file_path = data_file_path[i]
-    df = pd.read_csv(file_path)
-    if (i == 0):
-      all_data = df
-    else:
-      all_data = pd.concat([all_data, df])
+    try:
+      file_path = data_file_path[i]
+      df = pd.read_csv(file_path)
+      if (i == 0):
+        all_data = df
+      else:
+        all_data = pd.concat([all_data, df])
+    except Exception as e:
+      print(f"[FAILED] Failed to process DataFrame on {file_path}")
 
   return all_data
 
@@ -99,26 +102,27 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
     for symbol in scrapped_symbol_list[start_idx:start_idx+range_idx]:
       curr_symbol_df = df[df['symbol'] == symbol]
       
-      # # Download excel file
-      # for _, row in curr_symbol_df.iterrows():
-      #   # File name to be saved
-      #   filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
-      #   url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+      # MARK
+      # Download excel file
+      for _, row in curr_symbol_df.iterrows():
+        # File name to be saved
+        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
     
-      #   # Make 3 attempts to download the file
-      #   attempt = 1
-      #   limit_attempts = 3
-      #   download_return = False
-      #   while (attempt <= limit_attempts and not download_return):
-      #     download_return = download_excel_file(url, filename)
-      #     attempt += 1
-      #     if (not download_return):
-      #       if (attempt > limit_attempts):
-      #         print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
-      #       else:
-      #         print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
+        # Make 3 attempts to download the file
+        attempt = 1
+        limit_attempts = 3
+        download_return = False
+        while (attempt <= limit_attempts and not download_return):
+          download_return = download_excel_file(url, filename)
+          attempt += 1
+          if (not download_return):
+            if (attempt > limit_attempts):
+              print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
+            else:
+              print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
     
-      #   time.sleep(1)
+        time.sleep(1)
 
       # Check the industry of the company the code of the balance sheet
       # Check the code of the Balance Sheet to determine the industry
@@ -135,7 +139,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
         # Process each excel data
         current_symbol_list_data = list()
         for _, row in curr_symbol_df.iterrows():
-          data = process_excel(row['symbol'], row['period'], row['year'], industry_key_idx)
+          data = process_excel(row['symbol'], row['period'], row['year'], industry_key_idx, process)
           if (data is not None):
             current_symbol_list_data.append(data)
 
@@ -146,9 +150,10 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
 
-          # # Delete the excel file if the data has been processed
-          # filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{row['year']}_{row['period']}.xlsx")
-          # os.remove(filename)
+          # MARK
+          # Delete the excel file if the data has been processed
+          filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{row['year']}_{row['period']}.xlsx")
+          os.remove(filename)
 
         # Further handling for quarter data
         # TO DO
@@ -167,16 +172,18 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
     # Incremental
     start_idx += range_idx
 
-  # # Save quarter data
-  # dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-  # filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
-  # dataframe_quarter.to_csv(filename_store_quarter, index = False)   
+  # MARK
+  # Save quarter data
+  dataframe_quarter = pd.DataFrame(result_data_list_quarter)
+  filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
+  dataframe_quarter.to_csv(filename_store_quarter, index = False)   
 
-  # # Save annual data
-  # dataframe_annual = pd.DataFrame(result_data_list_annual)
-  # filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
-  # dataframe_annual.to_csv(filename_store_annual, index = False)   
-  # print(f"[COMPLETED] The file data has been stored in {filename_store_annual} and {filename_store_quarter}")
+  # MARK
+  # Save annual data
+  dataframe_annual = pd.DataFrame(result_data_list_annual)
+  filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
+  dataframe_annual.to_csv(filename_store_annual, index = False)   
+  print(f"[COMPLETED] The file data has been stored in {filename_store_annual} and {filename_store_quarter}")
 
 
 # Tries to open Excel File, return None if fails
@@ -206,7 +213,7 @@ def check_information_sheet(filename: str):
               rounding_val = v
       return rounding_val
     else:
-      print(f'[FAILED] Cannot open file {filename}. Make sure to input the right file name and sheet name')
+      print(f'[FAILED] Cannot open information sheet in file {filename}. Make sure to input the right file name and sheet name')
       return None
     
   except Exception as e:
@@ -314,13 +321,13 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
 
       elif (industry_key_idx == 4): # Finance and Sharia
         balance_sheet_dict['gross_loan'] = sum_value_equal(df, ['Loans third parties', 'Loans related parties'], rounding_val)
-        balance_sheet_dict['net_loan'] = balance_sheet_dict['gross_loan'] + balance_sheet_dict['allowance_for_loans']
-        balance_sheet_dict['non_loan_assets'] = balance_sheet_dict['total_assets'] - balance_sheet_dict['net_loan']
+        balance_sheet_dict['net_loan'] = none_handling_operation(balance_sheet_dict['gross_loan'],  balance_sheet_dict['allowance_for_loans'], "+", True)
+        balance_sheet_dict['non_loan_assets'] = none_handling_operation(balance_sheet_dict['total_assets'],  balance_sheet_dict['net_loan'], "-", False)
         balance_sheet_dict['total_cash_and_due_from_banks'] = sum_value_equal(df, ['Cash', 'Current accounts with bank Indonesia'], rounding_val) + sum_value_range(df, "Current accounts with other banks", "Allowance for impairment losses for current accounts with other bank", rounding_val)
         balance_sheet_dict['current_account'] = sum_value_range(df, 'Current accounts', "Current accounts related parties", rounding_val)
         balance_sheet_dict['savings_account'] = sum_value_range(df, 'Savings', "Savings related parties", rounding_val)
         balance_sheet_dict['time_deposits'] = sum_value_range(df, 'Time deposits', "Time deposits related parties", rounding_val)
-        balance_sheet_dict['total_deposits'] = balance_sheet_dict['current_account'] + balance_sheet_dict['savings_account'] + balance_sheet_dict['time_deposits']
+        balance_sheet_dict['total_deposits'] = none_handling_operation(none_handling_operation(balance_sheet_dict['current_account'], balance_sheet_dict['savings_account'], "+", True),  balance_sheet_dict['time_deposits'], "+", True)
 
       elif (industry_key_idx == 5): # Securities
         balance_sheet_dict['cash_only'] = sum_value_equal(df, ['Cash and cash equivalents', 'Restricted funds'], rounding_val)
@@ -334,7 +341,7 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
       return balance_sheet_dict
     
     else:
-      print(f'[FAILED] Cannot open file {filename}. Make sure to input the right file name and sheet name')
+      print(f'[FAILED] Cannot open balance sheet in file {filename}. Make sure to input the right file name and sheet name')
       return None
   except Exception as e:
     print(f"[FAILED] Failed to process Balance Sheet data of {filename}: {e}")
@@ -400,9 +407,9 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['non_interest_income'] = sum_value_range(df, 'Other operating income', "Other operating income", rounding_val)
         income_statement_dict['total_revenue'] = none_handling_operation(none_handling_operation(income_statement_dict['net_interest_income'], income_statement_dict['net_premium_income'], '+', False), income_statement_dict['non_interest_income'], '+', False)
         income_statement_dict['operating_expenses'] = sum_value_range(df, 'Other operating expenses', "Other operating expenses", rounding_val)
-        income_statement_dict['provision_for_impairment'] = sum_value_range(df, "Recovery of impairment loss", "Recovery of estimated loss of commitments and contingency", rounding_val) + sum_value_range(df, "Allowances for impairment losses", "Reversal (expense) of estimated losses on commitments and contingencies", rounding_val)
+        income_statement_dict['provision_for_impairment'] = none_handling_operation(sum_value_range(df, "Recovery of impairment loss", "Recovery of estimated loss of commitments and contingency", rounding_val),  sum_value_range(df, "Allowances for impairment losses", "Reversal (expense) of estimated losses on commitments and contingencies", rounding_val), "+", True)
         income_statement_dict['non_operating_income'] = sum_value_range(df, "Non-operating income and expense", "Share of profit (loss) of joint ventures accounted for using equity method", rounding_val)
-        income_statement_dict['net_income'] = none_handling_operation(sum_value_equal(df, ['Total profit (loss)']), income_statement_dict['minorities'], '+', True)
+        income_statement_dict['net_income'] = none_handling_operation(sum_value_equal(df, ['Total profit (loss)'], rounding_val), income_statement_dict['minorities'], '+', True)
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 5): # Securities
@@ -431,11 +438,10 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
       return income_statement_dict
     
     else:
-      print(f'[FAILED] Cannot open file {filename}. Make sure to input the right file name and sheet name')
+      print(f'[FAILED] Cannot open income statement in file {filename}. Make sure to input the right file name and sheet name')
       return None
   except Exception as e:
     print(f"[FAILED] Failed to process Income Statement data of {filename}: {e}")
-    print(income_statement_dict)
     return None  
 
 
@@ -480,7 +486,7 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
       return cash_flow_dict
     
     else:
-      print(f'[FAILED] Cannot open file {filename}. Make sure to input the right file name and sheet name')
+      print(f'[FAILED] Cannot open cash flow file {filename}. Make sure to input the right file name and sheet name')
       return None
     
   except Exception as e:
@@ -505,7 +511,7 @@ def date_format (period: str, year: str):
 
 
 
-def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
+def process_excel(symbol: str, period: str, year : int, industry_key_idx: int, process : int):
   try:
     # File name to be saved
     filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{year}_{period}.xlsx")
@@ -520,14 +526,14 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
       "industry_code" : industry_key_idx
     }
 
-    print(f"[PROCESS] Processing {symbol} date {date} industry_key {industry_key_idx}...")
+    print(f"[PROCESS P{process}] Processing {symbol} date {date} industry_key {industry_key_idx}...")
 
     # Process each data
-    print(f"[BS] Processing Balance Sheet ...")
+    print(f"[BS P{process}] Processing Balance Sheet ...")
     balance_sheet_data = process_balance_sheet(filename, mapping_dict['bs_sheet_code'], mapping_dict['bs_column_mapping'], rounding_val, industry_key_idx)
-    print(f"[IS] Processing Income Statement ...")
+    print(f"[IS P{process}] Processing Income Statement ...")
     income_statement_data = process_income_statement(filename, mapping_dict['is_sheet_code'], mapping_dict['is_column_mapping'], rounding_val, industry_key_idx)
-    print(f"[CF] Processing Cash Flow ...")
+    print(f"[CF P{process}] Processing Cash Flow ...")
     cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], rounding_val, industry_key_idx)
 
     # Update and combine dictionary
@@ -535,15 +541,15 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int):
     result_dict.update(income_statement_data)
     result_dict.update(cash_flow_data) 
 
-    # for printing only
-    for k, v in result_dict.items():
-      print(f"\t[{k} => {v}]")
+    # # for printing only
+    # for k, v in result_dict.items():
+    #   print(f"\t[{k} => {v}]")
     
-    print(f'[SUCCESS] Successfully processed {filename}!')
+    print(f'[SUCCESS P{process}] Successfully processed {filename}!')
     
     return result_dict
   except Exception as e:
-    print(f'[FAILED] Cannot get the data of {symbol} period {period} year {year}: {e}')
+    print(f'[FAILED P{process}] Cannot get the data of {symbol} period {period} year {year}: {e}')
     return None
 
 if __name__ == "__main__":
