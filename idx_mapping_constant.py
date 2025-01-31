@@ -27,16 +27,16 @@ GENERAL_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Total non-current assets" : "total_non_current_assets",
 }
 GENERAL_INCOME_STATEMENT_SHEET_CODE = ['1311000', '1321000']
 GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Total profit (loss)" : "net_income",
+  "Cost of sales and revenue" : "cost of revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income",
+  "Profit (loss) attributable to non-controlling interests" : "minorities",
+  "Profit (loss) attributable to parent entity" : "net_income",
   "Interest and finance costs" : "interest_expense_non_operating"
 }
 GENERAL_CASH_FLOW_SHEET_CODE = ['1510000']
@@ -62,16 +62,16 @@ PROPERTY_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Total non-current assets" : "total_non_current_assets",
 }
 PROPERTY_INCOME_STATEMENT_SHEET_CODE = ['2311000', '1321000']
 PROPERTY_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Total profit (loss)" : "net_income",
+  "Cost of sales and revenue" : "cost of revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income",
+  "Profit (loss) attributable to non-controlling interests" : "minorities",
+  "Total profit (loss)" : "net_income",
   "Interest and finance costs" : "interest_expense_non_operating"
 }
 PROPERTY_CASH_FLOW_SHEET_CODE = ['2510000']
@@ -98,16 +98,16 @@ INFRASTRUCTURE_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Total non-current assets" : "total_non_current_assets",
 }
 INFRASTRUCTURE_INCOME_STATEMENT_SHEET_CODE = ['3311000', '3312000']
 INFRASTRUCTURE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
-  "Total profit (loss)" : "net_income",
+  "Cost of sales and revenue" : "cost of revenue",
   "Total gross profit" : "gross_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income",
+  "Profit (loss) attributable to non-controlling interests" : "minorities",
+  "Profit (loss) attributable to parent entity" : "net_income",
   "Interest and finance costs" : "interest_expense_non_operating"
 }
 INFRASTRUCTURE_CASH_FLOW_SHEET_CODE = ['3510000']
@@ -125,6 +125,7 @@ INFRASTRUCTURE_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 FINANCE_SHARIA_BALANCE_SHEET_SHEET_CODE = ['4220000']
 FINANCE_SHARIA_BALANCE_SHEET_COLUMN_MAPPING = {
+  "Allowance for impairment losses for loans" : "allowance_for_loans",
   "Total assets" : "total_assets",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
@@ -133,11 +134,14 @@ FINANCE_SHARIA_BALANCE_SHEET_COLUMN_MAPPING = {
 }
 FINANCE_SHARIA_INCOME_STATEMENT_SHEET_CODE = ['4322000']
 FINANCE_SHARIA_INCOME_STATEMENT_COLUMN_MAPPING = {
-  "Total profit (loss)" : "net_income",
-  "Total gross profit" : "gross_income",
+  "Interest income" : "interest_income",
+  "Interest expenses" : "interest_expenses",
+  "Revenue from insurance premiums" : "premium_income",
+  "Claim expenses" : "premium_expense",
+  "Total profit from operation" : "operating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income"
+  "Profit (loss) attributable to non-controlling interests" : "minorities"
 }
 FINANCE_SHARIA_CASH_FLOW_SHEET_CODE = ['4510000']
 FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
@@ -153,22 +157,17 @@ FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 SECURITIES_BALANCE_SHEET_SHEET_CODE = ['5220000']
 SECURITIES_BALANCE_SHEET_COLUMN_MAPPING = {
-  "Total current assets" : "total_current_assets",
-  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total current liabilities" : "total_current_liabilities",
-  "Total non-current liabilities" : "total_non_current_liabilities",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Cash and cash equivalents" : "cash_only",
 }
 SECURITIES_INCOME_STATEMENT_SHEET_CODE = ['5311000']
 SECURITIES_INCOME_STATEMENT_COLUMN_MAPPING = {
-  "Total profit (loss)" : "net_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income"
+  "Total profit (loss)" : "net_income",
+  "Other expenses" : "interest_expense_non_operating"
 }
 SECURITIES_CASH_FLOW_SHEET_CODE = ['5510000']
 SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
@@ -185,23 +184,19 @@ SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 INSURANCE_BALANCE_SHEET_SHEET_CODE = ['6220000']
 INSURANCE_BALANCE_SHEET_COLUMN_MAPPING = {
-  "Total current assets" : "total_current_assets",
-  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total current liabilities" : "total_current_liabilities",
-  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Cash and cash equivalents" : "cash_only",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Cash and cash equivalents" : "cash_only",
 }
 INSURANCE_INCOME_STATEMENT_SHEET_CODE = ['6312000']
 INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Revenue from insurance premiums" : "total_revenue",
-  "Total profit (loss)" : "net_income",
+  "Total profit (loss) from continuing operations" : "operating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
-  "Total profit (loss) from continuing operations" : "operating_income"
+  "Total profit (loss)" : "net_income",
 }
 INSURANCE_CASH_FLOW_SHEET_CODE = ['6510000']
 INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
@@ -217,22 +212,21 @@ INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
 # Only be used for data that can be directly selected, without calculation
 FINANCING_BALANCE_SHEET_SHEET_CODE = ['8220000']
 FINANCING_BALANCE_SHEET_COLUMN_MAPPING = {
-  "Total current assets" : "total_current_assets",
-  "Total non-current assets" : "total_non_current_assets",
   "Total assets" : "total_assets",
-  "Total current liabilities" : "total_current_liabilities",
-  "Total non-current liabilities" : "total_non_current_liabilities",
+  "Cash and cash equivalents" : "cash_only",
+  "Cash and cash equivalents" : "cash_and_short_term_investments",
   "Total liabilities" : "total_liabilities",
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
-  "Cash and cash equivalents" : "cash_only",
+
 }
 FINANCING_INCOME_STATEMENT_SHEET_CODE = ['8312000', '8322000']
 FINANCING_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Interest and finance income" : "total_revenue",
-  "Total profit (loss)" : "net_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
+
+  "Total profit (loss)" : "net_income",
   "Total profit (loss) from continuing operations" : "operating_income"
 }
 FINANCING_CASH_FLOW_SHEET_CODE = ['8510000']
