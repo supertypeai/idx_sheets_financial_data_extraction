@@ -5,18 +5,38 @@ import time
 import pandas as pd
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+import requests
 
-def fetch_url(period: str, symbol: str, year: str, process: int):
+load_dotenv()
+
+PROXY_URL = os.getenv("proxy")
+PROXIES = {
+    'http': PROXY_URL,
+    'https': PROXY_URL,
+}
+
+
+def fetch_url(period: str, symbol: str, year: str, process: int, use_proxy : bool = False):
   # period = ["tw1", "tw2", "tw3", "audit"]
   try:
     url = f"{BASE_URL}/primary/ListedCompany/GetFinancialReport?year={year}&reportType=rdf&EmitenType=s&periode={period}&kodeEmiten={symbol.upper()}&SortColumn=KodeEmiten&SortOrder=asc"
 
-    req = urllib.request.Request(url, headers=create_headers())
-    resp = urllib.request.urlopen(req)
-    status_code = resp.getcode()
+    if (not use_proxy):
+      req = urllib.request.Request(url, headers=create_headers())
+      resp = urllib.request.urlopen(req)
+      status_code = resp.getcode()
+    else:
+      response = requests.get(url, proxies=PROXIES, verify=False)   
+      status_code = response.status_code
+
     if (status_code == 200):
-      data= resp.read()
-      json_data = json.loads(data)
+      if (not use_proxy):
+        data= resp.read()
+        json_data = json.loads(data)
+      else:
+        json_data = response.json()
+
       if (json_data['ResultCount'] > 0):
         print(f"[SUCCESS P{process}] Successfully get the data from stock {symbol}, year {year}, period {period}")
         return json_data
@@ -43,7 +63,7 @@ def get_data(symbol_list: list, process: int, year : int = None):
     # YEAR_RANGE == 0 if only want to fetch current year data
     for recuring_year in range(int(current_year), int(current_year) + YEAR_RANGE + 1):
       for period in PERIOD_LIST:
-        json_data = fetch_url(period, adjusted_symbol, recuring_year, process)
+        json_data = fetch_url(period, adjusted_symbol, recuring_year, process, True)
         if (json_data is not None):
           data_list = json_data["Results"][0]["Attachments"]
 

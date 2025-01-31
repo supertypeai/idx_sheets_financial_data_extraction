@@ -8,6 +8,16 @@ from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BA
 import warnings
 import urllib.request
 import openpyxl as xl 
+from dotenv import load_dotenv
+import requests
+
+load_dotenv()
+
+PROXY_URL = os.getenv("proxy")
+PROXIES = {
+    'http': PROXY_URL,
+    'https': PROXY_URL,
+}
 
 warnings.simplefilter(action='ignore', category=UserWarning)
 
@@ -65,17 +75,26 @@ def combine_technical_data ():
 
 
 # Call the API to download the Excel file data
-def download_excel_file(url: str, filename:str):
+def download_excel_file(url: str, filename:str, use_proxy: bool = False):
   try:
     print(f"[DOWNLOAD] Downloading from {url}")
 
-    # Construct the request
-    req = urllib.request.Request(url, headers=create_headers())
+    if (not use_proxy):
+      # Construct the request
+      req = urllib.request.Request(url, headers=create_headers())
 
-    # Open the request and write the response to a file
-    with urllib.request.urlopen(req) as response, open(filename, 'wb') as out_file:
-        data = response.read()  # Read the response data
-        out_file.write(data)    # Write the data to a file
+      # Open the request and write the response to a file
+      with urllib.request.urlopen(req) as response, open(filename, 'wb') as out_file:
+          data = response.read()  # Read the response data
+          out_file.write(data)    # Write the data to a file
+
+    else:
+      response = requests.get(url, proxies=PROXIES, verify=False)   
+
+      # Write the response content to a file
+      with open(filename, "wb") as out_file:
+          for chunk in response.iter_content(chunk_size=8192):
+              out_file.write(chunk)
     return True
   except Exception as e:
     print(f"[FAILED] Failed to download excel file: {e}")
@@ -114,7 +133,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
         limit_attempts = 3
         download_return = False
         while (attempt <= limit_attempts and not download_return):
-          download_return = download_excel_file(url, filename)
+          download_return = download_excel_file(url, filename, True)
           attempt += 1
           if (not download_return):
             if (attempt > limit_attempts):
