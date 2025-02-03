@@ -7,8 +7,11 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 import requests
+import warnings
 
 load_dotenv()
+
+warnings.simplefilter(action='ignore', category=UserWarning)
 
 PROXY_URL = os.getenv("proxy")
 PROXIES = {
@@ -52,6 +55,7 @@ def fetch_url(period: str, symbol: str, year: str, process: int, use_proxy : boo
   
 def get_data(symbol_list: list, process: int, year : int = None):
   RESULT_LIST = []
+  FAILED_LIST = []
   count = 0
   # If year is None, use the current year
   current_year = datetime.now().strftime("%Y") if year is None else year
@@ -84,6 +88,14 @@ def get_data(symbol_list: list, process: int, year : int = None):
               }
               RESULT_LIST.append(data_dict)
 
+          else:
+            data_dict = {
+                "symbol" : symbol,
+                "year" : recuring_year,
+                "period" : adjusted_period,
+              }
+            FAILED_LIST.append(data_dict)
+
         time.sleep(1.5)
 
     count +=1
@@ -93,4 +105,8 @@ def get_data(symbol_list: list, process: int, year : int = None):
   dataframe = pd.DataFrame(RESULT_LIST)
   filename_store = os.path.join(DATA_IDX_URL_DIR, f"idx_url_scrapped_list_P{process}.csv")
   dataframe.to_csv(filename_store, index = False)   
+
+  failed_datafrane = pd.DataFrame(FAILED_LIST)
+  failed_filename = os.path.join(DATA_IDX_URL_DIR, f"failed_idx_url_scrapped_list_P{process}.csv")
+  failed_datafrane.to_csv(failed_filename, index= False)
   print(f"[COMPLETED] The file data has been stored in {filename_store}")
