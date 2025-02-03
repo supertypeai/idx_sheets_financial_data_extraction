@@ -55,7 +55,7 @@ def none_handling_operation(num1: float, num2: float, operation: str, none_to_ze
 
 # Combine scrapped data from the csv files
 def combine_technical_data ():
-  data_file_path = [os.path.join(DATA_IDX_URL_DIR,f'idx_url_scrapped_list_P{i}.csv') for i in range(1,5)]
+  data_file_path = [os.path.join(DATA_IDX_URL_DIR,f'scrapped_list_P{i}.csv') for i in range(1,5)]
 
   # Combine data
   all_data = pd.DataFrame()
@@ -110,6 +110,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
   print(f"[PROGRESS] {data_length} data of {symbol_data_length} stocks are available to be scraped")
 
+  # Range limit is the symbol of file to be downloaded and processed at a time
   start_idx = 0
   range_limit = 3
   result_data_list_quarter = list()
@@ -120,45 +121,40 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
     # Iterate each symbol based on the range_limit
     for symbol in scrapped_symbol_list[start_idx:start_idx+range_idx]:
       curr_symbol_df = df[df['symbol'] == symbol]
+
+      print(symbol)
       
-      # MARK
-      # Download excel file
-      for _, row in curr_symbol_df.iterrows():
-        # File name to be saved
-        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
-        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+      # # MARK
+      # # Download excel file
+      # for _, row in curr_symbol_df.iterrows():
+      #   # File name to be saved
+      #   filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+      #   url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
     
-        # Make 3 attempts to download the file
-        attempt = 1
-        limit_attempts = 3
-        download_return = False
-        while (attempt <= limit_attempts and not download_return):
-          download_return = download_excel_file(url, filename, True)
-          attempt += 1
-          if (not download_return):
-            if (attempt > limit_attempts):
-              print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
-            else:
-              print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
+      #   # Make 3 attempts to download the file
+      #   attempt = 1
+      #   limit_attempts = 3
+      #   download_return = False
+      #   while (attempt <= limit_attempts and not download_return):
+      #     download_return = download_excel_file(url, filename, False)
+      #     attempt += 1
+      #     if (not download_return):
+      #       if (attempt > limit_attempts):
+      #         print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
+      #       else:
+      #         print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
     
-        time.sleep(1)
+      #   time.sleep(1)
 
       # Check the industry of the company the code of the balance sheet
       # Check the code of the Balance Sheet to determine the industry
-      first_row = curr_symbol_df.iloc[0]
-      filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{first_row['symbol']}_{first_row['year']}_{first_row['period']}.xlsx")
-      # Open work book, try to get the industry code
-      wb = xl.load_workbook(filename)
-      balance_sheet_code = wb.sheetnames[3]
-      industry_key_idx = int(balance_sheet_code[0])
-
-      # Check if the industry is detected
-      if (industry_key_idx is not None):
-        # Proceed if industry is detected
-        # Process each excel data
-        current_symbol_list_data = list()
-        for _, row in curr_symbol_df.iterrows():
-          data = process_excel(row['symbol'], row['period'], row['year'], industry_key_idx, process)
+      for _, row in curr_symbol_df.iterrows():
+        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+        # Open work book, try to get the industry code
+        try:
+          # Process each excel data
+          current_symbol_list_data = list()
+          data = process_excel(row['symbol'], row['period'], row['year'], filename, process)
           if (data is not None):
             current_symbol_list_data.append(data)
 
@@ -169,25 +165,25 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
 
-          # MARK
-          # Delete the excel file if the data has been processed
-          filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{row['year']}_{row['period']}.xlsx")
-          os.remove(filename)
+          # # MARK
+          # # Delete the excel file if the data has been processed
+          # os.remove(filename)
 
-        # Further handling for quarter data
-        # TO DO
+          # Further handling for quarter data
+          # TO DO
+
+        
+          # Insert all the data in current_symbol_list_data to result_data_list
+          for data in current_symbol_list_data:
+            result_data_list_quarter.append(data)
+
+
+            # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
+        except Exception as e:
+          print(f"[FAILED] Failed to open and process {filename} : {e}")
 
       
-        # Insert all the data in current_symbol_list_data to result_data_list
-        for data in current_symbol_list_data:
-          result_data_list_quarter.append(data)
-
-      else:
-        print(f"[FAILED] Failed to detect the industry of {symbol}")
-        # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
-
-      
-    break # for testing
+    # break # for testing
     # Incremental
     start_idx += range_idx
 
@@ -530,10 +526,12 @@ def date_format (period: str, year: str):
 
 
 
-def process_excel(symbol: str, period: str, year : int, industry_key_idx: int, process : int):
+def process_excel(symbol: str, period: str, year : int, filename: str, process : int):
   try:
-    # File name to be saved
-    filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{symbol}_{year}_{period}.xlsx")
+    # Get industry_key_idx
+    wb = xl.load_workbook(filename)
+    balance_sheet_code = wb.sheetnames[3]
+    industry_key_idx = int(balance_sheet_code[0])
 
     # Check Information Sheet
     rounding_val = check_information_sheet(filename)
@@ -563,8 +561,6 @@ def process_excel(symbol: str, period: str, year : int, industry_key_idx: int, p
     # # for printing only
     # for k, v in result_dict.items():
     #   print(f"\t[{k} => {v}]")
-    
-    print(f'[SUCCESS P{process}] Successfully processed {filename}!')
     
     return result_dict
   except Exception as e:

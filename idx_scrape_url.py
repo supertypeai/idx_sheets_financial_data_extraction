@@ -67,7 +67,7 @@ def get_data(symbol_list: list, process: int, year : int = None):
     # YEAR_RANGE == 0 if only want to fetch current year data
     for recuring_year in range(int(current_year), int(current_year) + YEAR_RANGE + 1):
       for period in PERIOD_LIST:
-        json_data = fetch_url(period, adjusted_symbol, recuring_year, process, True)
+        json_data = fetch_url(period, adjusted_symbol, recuring_year, process, False)
         if (json_data is not None):
           data_list = json_data["Results"][0]["Attachments"]
 
@@ -88,13 +88,13 @@ def get_data(symbol_list: list, process: int, year : int = None):
               }
               RESULT_LIST.append(data_dict)
 
-          else:
-            data_dict = {
-                "symbol" : symbol,
-                "year" : recuring_year,
-                "period" : adjusted_period,
-              }
-            FAILED_LIST.append(data_dict)
+        else:
+          data_dict = {
+              "symbol" : symbol,
+              "year" : recuring_year,
+              "period" : adjusted_period,
+            }
+          FAILED_LIST.append(data_dict)
 
         time.sleep(1.5)
 
@@ -103,10 +103,10 @@ def get_data(symbol_list: list, process: int, year : int = None):
       print(f"[CHECKPOINT] P{process} has covered {count} data")
 
   dataframe = pd.DataFrame(RESULT_LIST)
-  filename_store = os.path.join(DATA_IDX_URL_DIR, f"idx_url_scrapped_list_P{process}.csv")
+  filename_store = os.path.join(DATA_IDX_URL_DIR, f"scrapped_list_P{process}.csv")
   dataframe.to_csv(filename_store, index = False)   
 
   failed_datafrane = pd.DataFrame(FAILED_LIST)
-  failed_filename = os.path.join(DATA_IDX_URL_DIR, f"failed_idx_url_scrapped_list_P{process}.csv")
+  failed_filename = os.path.join(DATA_IDX_URL_DIR, f"failed_list_P{process}.csv")
   failed_datafrane.to_csv(failed_filename, index= False)
   print(f"[COMPLETED] The file data has been stored in {filename_store}")
