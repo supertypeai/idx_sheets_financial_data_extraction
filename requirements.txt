@@ -2,4 +2,6 @@ numpy==1.24.2
 openpyxl==3.1.2
 pandas==2.0.2
 python-dotenv==1.0.1
+Requests==2.32.3
+requests_ratelimiter==0.7.0
 supabase==2.12.0
