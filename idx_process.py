@@ -108,7 +108,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
   data_length = len(df)
   symbol_data_length = len(scrapped_symbol_list)
 
-  print(f"[PROGRESS] {data_length} data of {symbol_data_length} stocks are available to be scraped")
+  print(f"[PROGRESS] {data_length} data of {symbol_data_length} companies are available to be scraped")
 
   # Range limit is the symbol of file to be downloaded and processed at a time
   start_idx = 0
@@ -124,27 +124,27 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
       print(symbol)
       
-      # # MARK
-      # # Download excel file
-      # for _, row in curr_symbol_df.iterrows():
-      #   # File name to be saved
-      #   filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
-      #   url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+      # MARK
+      # Download excel file
+      for _, row in curr_symbol_df.iterrows():
+        # File name to be saved
+        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
     
-      #   # Make 3 attempts to download the file
-      #   attempt = 1
-      #   limit_attempts = 3
-      #   download_return = False
-      #   while (attempt <= limit_attempts and not download_return):
-      #     download_return = download_excel_file(url, filename, False)
-      #     attempt += 1
-      #     if (not download_return):
-      #       if (attempt > limit_attempts):
-      #         print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
-      #       else:
-      #         print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
+        # Make 3 attempts to download the file
+        attempt = 1
+        limit_attempts = 3
+        download_return = False
+        while (attempt <= limit_attempts and not download_return):
+          download_return = download_excel_file(url, filename, False)
+          attempt += 1
+          if (not download_return):
+            if (attempt > limit_attempts):
+              print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
+            else:
+              print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
     
-      #   time.sleep(1)
+        time.sleep(1)
 
       # Check the industry of the company the code of the balance sheet
       # Check the code of the Balance Sheet to determine the industry
@@ -165,9 +165,9 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
 
-          # # MARK
-          # # Delete the excel file if the data has been processed
-          # os.remove(filename)
+          # MARK
+          # Delete the excel file if the data has been processed
+          os.remove(filename)
 
           # Further handling for quarter data
           # TO DO
@@ -306,13 +306,13 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
       # Iterate for data that can be directly selected
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
+          # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
           if (type(column_mapping[row['Unnamed: 3']])) == list:
             for metric in column_mapping[row['Unnamed: 3']]:
               balance_sheet_dict[metric] = data_val
           else:
-            balance_sheet_dict[column_mapping[row['Unnamed: 3']]] == data_val
-          
+            balance_sheet_dict[column_mapping[row['Unnamed: 3']]] = data_val
           
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
@@ -383,12 +383,13 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
     if (df is not None):
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
+          # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
           if (type(column_mapping[row['Unnamed: 3']])) == list:
             for metric in column_mapping[row['Unnamed: 3']]:
               income_statement_dict[metric] = data_val
           else:
-            income_statement_dict[column_mapping[row['Unnamed: 3']]] == data_val
+            income_statement_dict[column_mapping[row['Unnamed: 3']]] = data_val
 
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
@@ -478,12 +479,13 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
     if (df is not None):
       for _, row in df.iterrows():
         if (row['Unnamed: 3'] in column_mapping):
+          # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
           data_val = None if (row['Unnamed: 1'] is None or np.isnan(row['Unnamed: 1'])) else float(row['Unnamed: 1'] * rounding_val) 
           if (type(column_mapping[row['Unnamed: 3']])) == list:
             for metric in column_mapping[row['Unnamed: 3']]:
               cash_flow_dict[metric] = data_val
           else:
-            cash_flow_dict[column_mapping[row['Unnamed: 3']]] == data_val
+            cash_flow_dict[column_mapping[row['Unnamed: 3']]] = data_val
       
       # Dividing companies based on industries
       # Doing Calculations and Adjustments

@@ -41,10 +41,10 @@ def fetch_url(period: str, symbol: str, year: str, process: int, use_proxy : boo
         json_data = response.json()
 
       if (json_data['ResultCount'] > 0):
-        print(f"[SUCCESS P{process}] Successfully get the data from stock {symbol}, year {year}, period {period}")
+        print(f"[SUCCESS P{process}] Successfully get the data from company {symbol}, year {year}, period {period}")
         return json_data
       else:
-        print(f"[FAILED P{process}] Data is not available for stock {symbol}, year {year}, period {period}")
+        print(f"[FAILED P{process}] Data is not available for company {symbol}, year {year}, period {period}")
         return None
     else:
       print(f"[FAILED P{process}] Failed to fetch from {url}. Get status code : {status_code}")
@@ -73,16 +73,11 @@ def get_data(symbol_list: list, process: int, year : int = None):
 
           for data in data_list:
             if (data['File_Type'] == ".xlsx" and "FinancialStatement" in data['File_Name']):
-              # Adjust period name
-              if (period == "audit"):
-                adjusted_period = "tw4"
-              else:
-                adjusted_period = period
-                
+
               data_dict = {
                 "symbol" : symbol,
                 "year" : recuring_year,
-                "period" : adjusted_period,
+                "period" : "tw4" if period == "audit" else period,
                 "file_name" : data['File_Name'],
                 "file_url" : data['File_Path']
               }
@@ -92,7 +87,7 @@ def get_data(symbol_list: list, process: int, year : int = None):
           data_dict = {
               "symbol" : symbol,
               "year" : recuring_year,
-              "period" : adjusted_period,
+              "period" : "tw4" if period == "audit" else period,
             }
           FAILED_LIST.append(data_dict)
 

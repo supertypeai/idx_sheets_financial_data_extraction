@@ -30,7 +30,7 @@ if __name__ == "__main__":
   # Get the table
   db_data = supabase.table("idx_active_company_profile").select("symbol").execute()
   df_db_data = pd.DataFrame(db_data.data)
-  symbol_list : list = df_db_data['symbol'].unique().tolist()[:12]
+  symbol_list : list = df_db_data['symbol'].unique().tolist()[:200]
   print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
   length_list = len(symbol_list)
