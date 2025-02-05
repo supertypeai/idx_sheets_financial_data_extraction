@@ -3,6 +3,7 @@ import random
 
 DATA_IDX_SHEETS_DIR = os.path.join(os.getcwd(), "data_idx_sheets")
 DATA_IDX_URL_DIR = os.path.join(os.getcwd(), "data_idx_url")
+DATA_PROCESSED_DIR = os.path.join(os.getcwd(), "data_processed")
 DATA_RESULT_DIR = os.path.join(os.getcwd(), "data_result")
 BASE_URL = "https://www.idx.co.id"
 PERIOD_LIST = ["tw1", "tw2", "tw3", "audit"]

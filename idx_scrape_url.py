@@ -61,32 +61,31 @@ def get_data(symbol_list: list, process: int, year : int, period: str):
   for symbol in symbol_list:
     adjusted_symbol = symbol.replace(".JK", "")
 
-    for period in PERIOD_LIST:
-      json_data = fetch_url(period, adjusted_symbol, year, process, False)
-      if (json_data is not None):
-        data_list = json_data["Results"][0]["Attachments"]
+    json_data = fetch_url(period, adjusted_symbol, year, process, False)
+    if (json_data is not None):
+      data_list = json_data["Results"][0]["Attachments"]
 
-        for data in data_list:
-          if (data['File_Type'] == ".xlsx" and "FinancialStatement" in data['File_Name']):
+      for data in data_list:
+        if (data['File_Type'] == ".xlsx" and "FinancialStatement" in data['File_Name']):
 
-            data_dict = {
-              "symbol" : symbol,
-              "year" : year,
-              "period" : "tw4" if period == "audit" else period,
-              "file_name" : data['File_Name'],
-              "file_url" : data['File_Path']
-            }
-            RESULT_LIST.append(data_dict)
-
-      else:
-        data_dict = {
+          data_dict = {
             "symbol" : symbol,
             "year" : year,
             "period" : "tw4" if period == "audit" else period,
+            "file_name" : data['File_Name'],
+            "file_url" : data['File_Path']
           }
-        FAILED_LIST.append(data_dict)
+          RESULT_LIST.append(data_dict)
 
-      time.sleep(1.5)
+    else:
+      data_dict = {
+          "symbol" : symbol,
+          "year" : year,
+          "period" : "tw4" if period == "audit" else period,
+        }
+      FAILED_LIST.append(data_dict)
+
+    time.sleep(1.5)
 
     count +=1
     if (count % 20 == 0):

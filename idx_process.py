@@ -4,7 +4,7 @@ import numpy as np
 import time
 import urllib
 from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
-from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BASE_URL, create_headers
+from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_PROCESSED_DIR, BASE_URL, create_headers
 import warnings
 import urllib.request
 import openpyxl as xl 
@@ -53,26 +53,6 @@ def none_handling_operation(num1: float, num2: float, operation: str, none_to_ze
       elif (operation == "*"):
         return num1 * num2
 
-# Combine scrapped data from the csv files
-def combine_technical_data ():
-  data_file_path = [os.path.join(DATA_IDX_URL_DIR,f'scrapped_list_P{i}.csv') for i in range(1,5)]
-
-  # Combine data
-  all_data = pd.DataFrame()
-  for i in range(len(data_file_path)):
-    try:
-      file_path = data_file_path[i]
-      df = pd.read_csv(file_path)
-      if (i == 0):
-        all_data = df
-      else:
-        all_data = pd.concat([all_data, df])
-    except Exception as e:
-      print(f"[FAILED] Failed to process DataFrame on {file_path}")
-
-  return all_data
-
-
 
 # Call the API to download the Excel file data
 def download_excel_file(url: str, filename:str, use_proxy: bool = False):
@@ -115,8 +95,10 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
   range_limit = 3
 
   # Container for Data
-  result_data_list_quarter = list()
-  result_data_list_annual = list()
+  result_data_list_quarter_bank = list()
+  result_data_list_quarter_non_bank = list()
+  result_data_list_annual_bank = list()
+  result_data_list_annual_non_bank = list()
 
   while (start_idx < symbol_data_length):
     range_idx = min(symbol_data_length - start_idx, range_limit)
@@ -162,7 +144,10 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
             # For quarter data, needs further handling. 
             # On the other side, for annual data, we can directly insert into the store
             if (row['symbol'] == "tw4"):
-              result_data_list_annual.append(data)
+              if (is_bank):
+                result_data_list_annual_bank.append(data)
+              else:
+                result_data_list_annual_non_bank.append(data)
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
 
@@ -176,7 +161,11 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
         
           # Insert all the data in current_symbol_list_data to result_data_list
           for data in current_symbol_list_data:
-            result_data_list_quarter.append(data)
+            if (is_bank):
+              result_data_list_quarter_bank.append(data)
+            else:
+              result_data_list_quarter_non_bank.append(data)
+
 
 
             # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
@@ -190,19 +179,31 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
   # MARK
   # Save quarter data
-  if (len(result_data_list_quarter) != 0):
-    dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-    filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
+  if (len(result_data_list_quarter_bank) != 0):
+    dataframe_quarter_bank = pd.DataFrame(result_data_list_quarter_bank)
+    filename_store_quarter = os.path.join(DATA_PROCESSED_DIR, f"data_quarter_P{process}_bank.csv")
+    dataframe_quarter_bank.to_csv(filename_store_quarter, index = False)   
+    print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
+  
+  if (len(result_data_list_quarter_non_bank) != 0):
+    dataframe_quarter = pd.DataFrame(result_data_list_quarter_non_bank)
+    filename_store_quarter = os.path.join(DATA_PROCESSED_DIR, f"data_quarter_P{process}_non_bank.csv")
     dataframe_quarter.to_csv(filename_store_quarter, index = False)   
     print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
 
   # MARK
   # Save annual data
-  if (len(result_data_list_annual) != 0):
-    dataframe_annual = pd.DataFrame(result_data_list_annual)
-    filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
+  if (len(result_data_list_annual_bank) != 0):
+    dataframe_annual_bank = pd.DataFrame(result_data_list_annual_bank)
+    filename_store_annual = os.path.join(DATA_PROCESSED_DIR, f"data_annual_P{process}_bank.csv")
+    dataframe_annual_bank.to_csv(filename_store_annual, index = False)   
+    print(f"[COMPLETED] Quarter data has been stored in {filename_store_annual}")
+  
+  if (len(result_data_list_annual_non_bank) != 0):
+    dataframe_annual = pd.DataFrame(result_data_list_annual_non_bank)
+    filename_store_annual = os.path.join(DATA_PROCESSED_DIR, f"data_annual_P{process}_non_bank.csv")
     dataframe_annual.to_csv(filename_store_annual, index = False)   
-    print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
+    print(f"[COMPLETED] Quarter data has been stored in {filename_store_annual}")
 
 
 # Tries to open Excel File, return None if fails
@@ -502,7 +503,6 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
         cash_flow_dict['cash_inflow'] = None #TODO
         cash_flow_dict['total_net_cash_outflow'] = None #TODO
         cash_flow_dict['realized_capital_goods_investment'] = None #TODO
-        cash_flow_dict['total_net_cash_flow'] = None #TODO
 
       return cash_flow_dict
     
