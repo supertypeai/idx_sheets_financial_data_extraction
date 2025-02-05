@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import time
 import urllib
-from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING, BALANCE_SHEET_METRICS, INCOME_STATEMENT_METRICS, CASH_FLOW_METRICS
+from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
 from idx_utils import DATA_IDX_SHEETS_DIR, DATA_IDX_URL_DIR, DATA_RESULT_DIR, BASE_URL, create_headers
 import warnings
 import urllib.request
@@ -113,16 +113,17 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
   # Range limit is the symbol of file to be downloaded and processed at a time
   start_idx = 0
   range_limit = 3
+
+  # Container for Data
   result_data_list_quarter = list()
   result_data_list_annual = list()
+
   while (start_idx < symbol_data_length):
     range_idx = min(symbol_data_length - start_idx, range_limit)
 
     # Iterate each symbol based on the range_limit
     for symbol in scrapped_symbol_list[start_idx:start_idx+range_idx]:
       curr_symbol_df = df[df['symbol'] == symbol]
-
-      print(symbol)
       
       # MARK
       # Download excel file
@@ -154,7 +155,7 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
         try:
           # Process each excel data
           current_symbol_list_data = list()
-          data = process_excel(row['symbol'], row['period'], row['year'], filename, process)
+          data, is_bank = process_excel(row['symbol'], row['period'], row['year'], filename, process)
           if (data is not None):
             current_symbol_list_data.append(data)
 
@@ -189,16 +190,19 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
   # MARK
   # Save quarter data
-  dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-  filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
-  dataframe_quarter.to_csv(filename_store_quarter, index = False)   
+  if (len(result_data_list_quarter) != 0):
+    dataframe_quarter = pd.DataFrame(result_data_list_quarter)
+    filename_store_quarter = os.path.join(DATA_RESULT_DIR, f"idx_result_data_quarter_P{process}.csv")
+    dataframe_quarter.to_csv(filename_store_quarter, index = False)   
+    print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
 
   # MARK
   # Save annual data
-  dataframe_annual = pd.DataFrame(result_data_list_annual)
-  filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
-  dataframe_annual.to_csv(filename_store_annual, index = False)   
-  print(f"[COMPLETED] The file data has been stored in {filename_store_annual} and {filename_store_quarter}")
+  if (len(result_data_list_annual) != 0):
+    dataframe_annual = pd.DataFrame(result_data_list_annual)
+    filename_store_annual = os.path.join(DATA_RESULT_DIR, f"idx_result_data_annual_P{process}.csv")
+    dataframe_annual.to_csv(filename_store_annual, index = False)   
+    print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
 
 
 # Tries to open Excel File, return None if fails
@@ -289,12 +293,12 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
 
 
 # Process balance sheet 
-def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
+def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: dict, metrics: list, rounding_val: float, industry_key_idx: int):
   # Balance Sheet
   try:
     # Create dict using metrics template
     balance_sheet_dict = dict()
-    for metric in BALANCE_SHEET_METRICS:
+    for metric in metrics:
       balance_sheet_dict[metric] = None
 
     for sheet_name in sheet_code_list:
@@ -367,12 +371,12 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
 
 
 # Process income statement
-def process_income_statement(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
+def process_income_statement(filename: str, sheet_code_list: list, column_mapping: dict, metrics: list,  rounding_val: float, industry_key_idx: int):
   # Income Statement
   try:
     # Create dict using metrics template
     income_statement_dict = dict()
-    for metric in INCOME_STATEMENT_METRICS:
+    for metric in metrics:
       income_statement_dict[metric] = None
 
     for sheet_name in sheet_code_list:
@@ -463,12 +467,12 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 
 
 # Process cash flow
-def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict, rounding_val: float, industry_key_idx: int):
+def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict, metrics: list, rounding_val: float, industry_key_idx: int):
   # Cash flow
   try:
     # Create dict using metrics template
     cash_flow_dict = dict()
-    for metric in CASH_FLOW_METRICS:
+    for metric in metrics:
       cash_flow_dict[metric] = None
 
     for sheet_name in sheet_code_list:
@@ -549,11 +553,11 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
 
     # Process each data
     print(f"[BS P{process}] Processing Balance Sheet ...")
-    balance_sheet_data = process_balance_sheet(filename, mapping_dict['bs_sheet_code'], mapping_dict['bs_column_mapping'], rounding_val, industry_key_idx)
+    balance_sheet_data = process_balance_sheet(filename, mapping_dict['bs_sheet_code'], mapping_dict['bs_column_mapping'], mapping_dict['bs_metrics'], rounding_val, industry_key_idx)
     print(f"[IS P{process}] Processing Income Statement ...")
-    income_statement_data = process_income_statement(filename, mapping_dict['is_sheet_code'], mapping_dict['is_column_mapping'], rounding_val, industry_key_idx)
+    income_statement_data = process_income_statement(filename, mapping_dict['is_sheet_code'], mapping_dict['is_column_mapping'], mapping_dict['is_metrics'], rounding_val, industry_key_idx)
     print(f"[CF P{process}] Processing Cash Flow ...")
-    cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], rounding_val, industry_key_idx)
+    cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], mapping_dict['cf_metrics'], rounding_val, industry_key_idx)
 
     # Update and combine dictionary
     result_dict.update(balance_sheet_data)
@@ -564,10 +568,10 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
     # for k, v in result_dict.items():
     #   print(f"\t[{k} => {v}]")
     
-    return result_dict
+    return result_dict, industry_key_idx == 4
   except Exception as e:
     print(f'[FAILED P{process}] Cannot get the data of {symbol} period {period} year {year}: {e}')
-    return None
+    return None, None
 
 if __name__ == "__main__":
   all_data = combine_technical_data()

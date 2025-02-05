@@ -53,45 +53,40 @@ def fetch_url(period: str, symbol: str, year: str, process: int, use_proxy : boo
     print(f"[FAILED P{process}] Failed to fetch from {url} : {e}")
     return None
   
-def get_data(symbol_list: list, process: int, year : int = None):
+def get_data(symbol_list: list, process: int, year : int, period: str):
   RESULT_LIST = []
   FAILED_LIST = []
   count = 0
-  # If year is None, use the current year
-  current_year = datetime.now().strftime("%Y") if year is None else year
+
   for symbol in symbol_list:
     adjusted_symbol = symbol.replace(".JK", "")
 
-    # Adjust this recuring year
-    YEAR_RANGE = 0
-    # YEAR_RANGE == 0 if only want to fetch current year data
-    for recuring_year in range(int(current_year), int(current_year) + YEAR_RANGE + 1):
-      for period in PERIOD_LIST:
-        json_data = fetch_url(period, adjusted_symbol, recuring_year, process, False)
-        if (json_data is not None):
-          data_list = json_data["Results"][0]["Attachments"]
+    for period in PERIOD_LIST:
+      json_data = fetch_url(period, adjusted_symbol, year, process, False)
+      if (json_data is not None):
+        data_list = json_data["Results"][0]["Attachments"]
 
-          for data in data_list:
-            if (data['File_Type'] == ".xlsx" and "FinancialStatement" in data['File_Name']):
+        for data in data_list:
+          if (data['File_Type'] == ".xlsx" and "FinancialStatement" in data['File_Name']):
 
-              data_dict = {
-                "symbol" : symbol,
-                "year" : recuring_year,
-                "period" : "tw4" if period == "audit" else period,
-                "file_name" : data['File_Name'],
-                "file_url" : data['File_Path']
-              }
-              RESULT_LIST.append(data_dict)
-
-        else:
-          data_dict = {
+            data_dict = {
               "symbol" : symbol,
-              "year" : recuring_year,
+              "year" : year,
               "period" : "tw4" if period == "audit" else period,
+              "file_name" : data['File_Name'],
+              "file_url" : data['File_Path']
             }
-          FAILED_LIST.append(data_dict)
+            RESULT_LIST.append(data_dict)
 
-        time.sleep(1.5)
+      else:
+        data_dict = {
+            "symbol" : symbol,
+            "year" : year,
+            "period" : "tw4" if period == "audit" else period,
+          }
+        FAILED_LIST.append(data_dict)
+
+      time.sleep(1.5)
 
     count +=1
     if (count % 20 == 0):
