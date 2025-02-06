@@ -1,9 +1,9 @@
-name: Main program
+name: Batch 2 Process
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 18 */3 * *' 
+    - cron: '0 0 15 3,4,7,10 *' # “At 00:00 on day-of-month 15 in March, April, July, and October.”
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
             SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
             SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
             proxy: ${{ secrets.proxy }}
-        run: python main.py
+        run: python main.py 2
           
       - name: commit files
         run: |

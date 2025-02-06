@@ -15,20 +15,50 @@ load_dotenv()
 
 '''
 HOW TO START:
+## 1
 => For automatic start:
-python main.py
+Command:
+python main.py {BATCH}
 
-Automatic start will try to get the data from the last half year. #needs to be edited
+Description:
+Automatically scrape and extract based on current time
+Interveral (3*30 + 7) for Annual
+Interval (30 + 7) for Quarter
 
+if it is run in:
+  Month 3: 
+  -> get annual and Q4 of last year
+  Month 4:
+  -> get Q1 of current year
+  Month 7:
+  -> get Q2 of current year
+  Month 10: 
+  -> get Q3 of current year
 
+BATCH = [1, 2, 3, 4, all]
+  1 => First quarter
+  2 => Second quarter
+  3 => Third quarter
+  4 => Last quarter
+  all => scrape for all in the database
+
+## 2
 => For manual start:
-program requires two parameters: {year} and {period}
-Period => see PERIOD_LIST in idx_utils.py
+Command:
+python main.py {BATCH} {YEAR} {PERIOD}
+e.g.: python main.py 2024 tw1   #Scrape and extract Q1 of 2024
 
-example: 2024 tw1
+Description:
+program requires two parameters: {year} and {PERIOD}
+YEAR => year to be scrapped
+PERIOD => see PERIOD_LIST in idx_utils.py
+BATCH = [1, 2, 3, 4, all]
+  1 => First quarter
+  2 => Second quarter
+  3 => Third quarter
+  4 => Last quarter
+  all => scrape for all in the database
 
-To Run:
-python main.py 2024 tw1
 '''
 
 # Combine scrapped data from the csv files
@@ -62,14 +92,13 @@ def combine_url_data():
         failed_data = pd.concat([failed_data, df])
       os.remove(file_path)
     except Exception as e:
-      print(f"[FAILED] Failed to process DataFrame on {file_path}")
+      print(f"[FAILED] There is no failed data: {file_path}")
   failed_data.to_csv(os.path.join(DATA_RESULT_DIR, 'data_failed.csv'), index=False)
 
   return all_data
 
 def combine_processed_data():
-  bank_data = pd.DataFrame()
-  non_bank_data = pd.DataFrame()
+  data = pd.DataFrame()
 
   files_path =  [os.path.join(DATA_PROCESSED_DIR, filename) for filename in os.listdir(os.path.join(DATA_PROCESSED_DIR))]
   try:
@@ -77,26 +106,16 @@ def combine_processed_data():
       if ".csv" in filename:
         df = pd.read_csv(filename)
 
-        if ("non_bank" in filename):
-          if (len(non_bank_data) == 0):
-            non_bank_data = df
-          else:
-            non_bank_data = pd.concat([non_bank_data, df])
-
-        else : # for banks
-          if (len(bank_data) == 0):
-            bank_data = df
-          else:
-            bank_data = pd.concat([bank_data, df])
+        if (len(data) == 0):
+          data = df
+        else:
+          data = pd.concat([data, df])
 
     # Save
-    bank_data = bank_data.drop(['industry_code'], axis=1)
-    bank_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_bank.csv"), index=False)
+    data = data.drop(['industry_code'], axis=1)
+    data.to_csv(os.path.join(DATA_RESULT_DIR, "data_result.csv"), index=False)
 
-    non_bank_data = non_bank_data.drop(['industry_code'], axis=1)
-    non_bank_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_non_bank.csv"), index=False)
-
-    return bank_data, non_bank_data
+    return data
 
   except Exception as e:
     print(f"[FAILED] Failed to combine processed Data.")
@@ -113,44 +132,64 @@ if __name__ == "__main__":
   supabase = create_client(url_supabase, key)
 
   
-  if (len(sys.argv) > 1):
-    assert len(sys.argv) == 3, "[ERROR] Invalid argument input!"
+  if (len(sys.argv) > 2):
+    assert len(sys.argv) == 4, "[ERROR] Invalid argument input!"
 
     # Read running argument
-    year_arg = int(sys.argv[1])
-    period_arg = sys.argv[2]
+    batch_arg = sys.argv[1]
+    year_arg = int(sys.argv[2])
+    period_arg = sys.argv[3]
   
     assert period_arg in PERIOD_LIST, "[ERROR] Invalid period argument!"
 
   else:
 
     current_time = datetime.now()
-    last_quarter = current_time - timedelta(30 * 6)
-    month = int(last_quarter.month)
-    month_arg_idx = max((month - 1)//3, 0)
-    period_arg = PERIOD_LIST[month_arg_idx]
-    year_arg = int(last_quarter.year)
+    current_month = int(current_time.month)
+    batch_arg = sys.argv[1]
+    if (current_month == 3): # Get Annual and Q4 last year
+      period_arg = "audit"
+      year_arg = int(current_time.year) - 1
+    elif (current_month in [4,7,10]): # 4, 7, 10 # Get Q1, Q2, Q3 this year
+      last_quarter = current_time - timedelta(30)
+      month = int(last_quarter.month)
+      month_arg_idx = max((month - 1)//3, 0)
+      period_arg = PERIOD_LIST[month_arg_idx]
+      year_arg = int(current_time.year)
+
+
+  ## SCRAPE URL PROCESS
+  ######################
     
   # Get the table
   db_data = supabase.table("idx_active_company_profile").select("symbol").execute()
   df_db_data = pd.DataFrame(db_data.data)
-  symbol_list : list = df_db_data['symbol'].unique().tolist()[:300]
+  symbol_list : list = df_db_data['symbol'].unique().tolist()
   print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
+  
+  start_idx = 0
   length_list = len(symbol_list)
-  i1 = int(length_list / 4)
+  if (batch_arg != "all"):
+    # ignore if it is all
+    length_list = length_list // 4
+    start_idx += (int(batch_arg) - 1) * length_list
+    print(f"[BATCH PROCESS] Finding batch process for company index {start_idx} to {start_idx+length_list}")
+  i1 = length_list // 4
   i2 = 2 * i1
   i3 = 3 * i1
+
+
 
   # Start time
   start = time.time()
 
   # Scraper Program
   # [LOOK] idx_scrape_url.py
-  p1 = Process(target=get_data, args=(symbol_list[:i1], 1, year_arg, period_arg))
-  p2 = Process(target=get_data, args=(symbol_list[i1:i2], 2, year_arg, period_arg))
-  p3 = Process(target=get_data, args=(symbol_list[i2:i3], 3, year_arg, period_arg))
-  p4 = Process(target=get_data, args=(symbol_list[i3:], 4, year_arg, period_arg))
+  p1 = Process(target=get_data, args=(symbol_list[start_idx : start_idx+i1], 1, year_arg, period_arg))
+  p2 = Process(target=get_data, args=(symbol_list[start_idx+i1 : start_idx+i2], 2, year_arg, period_arg))
+  p3 = Process(target=get_data, args=(symbol_list[start_idx+i2 : start_idx+i3], 3, year_arg, period_arg))
+  p4 = Process(target=get_data, args=(symbol_list[start_idx+i3 : start_idx+length_list], 4, year_arg, period_arg))
 
   p1.start()
   p2.start()
@@ -168,7 +207,10 @@ if __name__ == "__main__":
   scraping_duration = int(end_scraping-start)
   print(f"The scraping execution time: {time.strftime('%H:%M:%S', time.gmtime(scraping_duration))}")
 
-  print("test")
+
+
+  ## DOWNLOAD AND EXCEL PROCESS
+  ###############################
 
   # Combine scrapped data
   all_data = combine_url_data()
@@ -202,7 +244,7 @@ if __name__ == "__main__":
   print(f"The processing execution time: {time.strftime('%H:%M:%S', time.gmtime(processing_duration))}")
 
   # Combine processed data
-  bank_data, non_bank_data = combine_processed_data()
+  data = combine_processed_data()
 
 
 

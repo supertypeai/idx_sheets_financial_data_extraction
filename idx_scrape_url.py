@@ -91,11 +91,14 @@ def get_data(symbol_list: list, process: int, year : int, period: str):
     if (count % 20 == 0):
       print(f"[CHECKPOINT] P{process} has covered {count} data")
 
-  dataframe = pd.DataFrame(RESULT_LIST)
-  filename_store = os.path.join(DATA_IDX_URL_DIR, f"scrapped_list_P{process}.csv")
-  dataframe.to_csv(filename_store, index = False)   
+  if (len(RESULT_LIST) > 0):
+    dataframe = pd.DataFrame(RESULT_LIST)
+    filename_store = os.path.join(DATA_IDX_URL_DIR, f"scrapped_list_P{process}.csv")
+    dataframe.to_csv(filename_store, index = False)   
+    print(f"[COMPLETED] The file data has been stored in {filename_store}")
 
-  failed_datafrane = pd.DataFrame(FAILED_LIST)
-  failed_filename = os.path.join(DATA_IDX_URL_DIR, f"failed_list_P{process}.csv")
-  failed_datafrane.to_csv(failed_filename, index= False)
-  print(f"[COMPLETED] The file data has been stored in {filename_store}")
+
+  if (len(FAILED_LIST) > 0):
+    failed_datafrane = pd.DataFrame(FAILED_LIST)
+    failed_filename = os.path.join(DATA_IDX_URL_DIR, f"failed_list_P{process}.csv")
+    failed_datafrane.to_csv(failed_filename, index= False)

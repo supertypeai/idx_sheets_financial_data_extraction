@@ -277,7 +277,7 @@ INSURANCE_BALANCE_SHEET_COLUMN_MAPPING = {
 INSURANCE_INCOME_STATEMENT_SHEET_CODE = ['6312000']
 INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Revenue from insurance premiums" : "total_revenue",
-  "Total profit (loss) from continuing operations" : "perating_income",
+  "Total profit (loss) from continuing operations" : "operating_income",
   "Total profit (loss) before tax" : "pretax_income",
   "Tax benefit (expenses)" : "income_taxes",
   "Total profit (loss)" : "net_income",
