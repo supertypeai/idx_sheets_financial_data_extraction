@@ -98,27 +98,46 @@ def combine_url_data():
   return all_data
 
 def combine_processed_data():
-  data = pd.DataFrame()
 
-  files_path =  [os.path.join(DATA_PROCESSED_DIR, filename) for filename in os.listdir(os.path.join(DATA_PROCESSED_DIR))]
-  try:
-    for filename in files_path:
-      if ".csv" in filename:
-        df = pd.read_csv(filename)
+  data_quarter_path = [os.path.join(DATA_PROCESSED_DIR,f'data_quarter_P{i}.csv') for i in range(1,5)]
+  data_annual_path = [os.path.join(DATA_PROCESSED_DIR,f'data_annual_P{i}.csv') for i in range(1,5)]
 
-        if (len(data) == 0):
-          data = df
-        else:
-          data = pd.concat([data, df])
+  quater_data = None
+  annual_data = None
 
-    # Save
-    data = data.drop(['industry_code'], axis=1)
-    data.to_csv(os.path.join(DATA_RESULT_DIR, "data_result.csv"), index=False)
+  for i in range(len(data_quarter_path)):
+    try:
+      file_path = data_quarter_path[i]
+      df = pd.read_csv(file_path)
+      if (i == 0):
+        quarter_data = df
+      else:
+        quarter_data = pd.concat([quarter_data, df])
+    except Exception as e:
+      print(f"[FAILED] Failed to process DataFrame on {file_path}: {e}")
 
-    return data
+  # Save
+  if (quarter_data is not None):
+    quarter_data = quarter_data.drop(['industry_code'], axis=1)
+    quarter_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_quarter_result.csv"), index=False)
 
-  except Exception as e:
-    print(f"[FAILED] Failed to combine processed Data.")
+  for i in range(len(data_annual_path)):
+    try:
+      file_path = data_annual_path[i]
+      df = pd.read_csv(file_path)
+      if (i == 0):
+        annual_data = df
+      else:
+        annual_data = pd.concat([annual_data, df])
+    except Exception as e:
+      print(f"[FAILED] Failed to process DataFrame on {file_path}: {e}")
+
+  # Save
+  if(annual_data is not None):
+    annual_data = annual_data.drop(['industry_code'], axis=1)
+    annual_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_annual_result.csv"), index=False)
+
+  return quater_data, annual_data
 
 
 
@@ -209,8 +228,8 @@ if __name__ == "__main__":
 
 
 
-  ## DOWNLOAD AND EXCEL PROCESS
-  ###############################
+  # DOWNLOAD AND EXCEL PROCESS
+  ##############################
 
   # Combine scrapped data
   all_data = combine_url_data()

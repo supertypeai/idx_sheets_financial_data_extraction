@@ -112,7 +112,7 @@ GENERAL_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
 }
-GENERAL_INCOME_STATEMENT_SHEET_CODE = ['1311000', '1321000']
+GENERAL_INCOME_STATEMENT_SHEET_CODE = ['1311000', '1321000', '1312000', '1322000']
 GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
   "Cost of sales and revenue" : "cost_of_revenue",
@@ -147,7 +147,7 @@ PROPERTY_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
 }
-PROPERTY_INCOME_STATEMENT_SHEET_CODE = ['2311000', '1321000']
+PROPERTY_INCOME_STATEMENT_SHEET_CODE = ['2311000', '1321000', '2321000', '2312000', '2322000']
 PROPERTY_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
   "Cost of sales and revenue" : "cost_of_revenue",
@@ -183,7 +183,7 @@ INFRASTRUCTURE_BALANCE_SHEET_COLUMN_MAPPING = {
   "Total equity" : "total_equity",
   "Total equity attributable to equity owners of parent entity" : "stockholders_equity",
 }
-INFRASTRUCTURE_INCOME_STATEMENT_SHEET_CODE = ['3311000', '3312000']
+INFRASTRUCTURE_INCOME_STATEMENT_SHEET_CODE = ['3311000', '3312000', '3321000']
 INFRASTRUCTURE_INCOME_STATEMENT_COLUMN_MAPPING = {
   "Sales and revenue" : "total_revenue",
   "Cost of sales and revenue" : "cost_of_revenue",
