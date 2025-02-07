@@ -55,177 +55,6 @@ def none_handling_operation(num1: float, num2: float, operation: str, none_to_ze
         return num1 * num2
 
 
-# Call the API to download the Excel file data
-def download_excel_file(url: str, filename:str, use_proxy: bool = False):
-  try:
-    print(f"[DOWNLOAD] Downloading from {url}")
-
-    if (not use_proxy):
-      # Construct the request
-      req = urllib.request.Request(url, headers=create_headers())
-
-      # Open the request and write the response to a file
-      with urllib.request.urlopen(req) as response, open(filename, 'wb') as out_file:
-          data = response.read()  # Read the response data
-          out_file.write(data)    # Write the data to a file
-
-    else:
-      response = requests.get(url, proxies=PROXIES, verify=False)   
-
-      # Write the response content to a file
-      with open(filename, "wb") as out_file:
-          for chunk in response.iter_content(chunk_size=8192):
-              out_file.write(chunk)
-    return True
-  except Exception as e:
-    print(f"[FAILED] Failed to download excel file: {e}")
-    return False
-
-
-
-# Main function to process the combined data (as a dataframe)
-def process_dataframe(df: pd.DataFrame, process: int = 1):
-  scrapped_symbol_list = df['symbol'].unique()
-  data_length = len(df)
-  symbol_data_length = len(scrapped_symbol_list)
-
-  print(f"[PROGRESS] {data_length} data of {symbol_data_length} companies are available to be scraped")
-
-  # Range limit is the symbol of file to be downloaded and processed at a time
-  start_idx = 0
-  range_limit = 3
-
-  # Container for Data
-  result_data_list_quarter = list()
-  result_data_list_annual = list()
-
-  while (start_idx < symbol_data_length):
-    range_idx = min(symbol_data_length - start_idx, range_limit)
-
-    # Iterate each symbol based on the range_limit
-    for symbol in scrapped_symbol_list[start_idx:start_idx+range_idx]:
-      curr_symbol_df = df[df['symbol'] == symbol]
-      
-      # MARK
-      # Download excel file
-      for _, row in curr_symbol_df.iterrows():
-        # File name to be saved
-        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
-        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
-    
-        # Make 3 attempts to download the file
-        attempt = 1
-        limit_attempts = 3
-        download_return = False
-        while (attempt <= limit_attempts and not download_return):
-          download_return = download_excel_file(url, filename, False)
-          attempt += 1
-          if (not download_return):
-            if (attempt > limit_attempts):
-              print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
-            else:
-              print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
-    
-        time.sleep(1)
-
-      # Check the industry of the company the code of the balance sheet
-      # Check the code of the Balance Sheet to determine the industry
-      for _, row in curr_symbol_df.iterrows():
-        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
-        # Open work book, try to get the industry code
-        try:
-          # Process each excel data
-          current_symbol_list_data = list()
-          data = process_excel(row['symbol'], row['period'], row['year'], filename, process)
-          if (data is not None):
-            current_symbol_list_data.append(data)
-
-            # For quarter data, needs further handling. 
-            # On the other side, for annual data, we can directly insert into the store
-            if (row['symbol'] == "tw4"):
-              result_data_list_annual.append(data)
-
-            print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
-
-          # MARK
-          # Delete the excel file if the data has been processed
-          os.remove(filename)
-
-          # Further handling for quarter data
-          # TO DO
-
-        
-          # Insert all the data in current_symbol_list_data to result_data_list
-          for data in current_symbol_list_data:
-            result_data_list_quarter.append(data)
-
-
-
-            # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
-        except Exception as e:
-          print(f"[FAILED] Failed to open and process {filename} : {e}")
-
-      
-    # break # for testing
-    # Incremental
-    start_idx += range_idx
-
-  # MARK
-  # Save quarter data
-  if (len(result_data_list_quarter) != 0):
-    dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-    filename_store_quarter = os.path.join(DATA_PROCESSED_DIR, f"data_quarter_P{process}.csv")
-    dataframe_quarter.to_csv(filename_store_quarter, index = False)   
-    print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
-  
-
-
-  # MARK
-  # Save annual data
-  if (len(result_data_list_annual) != 0):
-    dataframe_annual = pd.DataFrame(result_data_list_annual)
-    filename_store_annual = os.path.join(DATA_PROCESSED_DIR, f"data_annual_P{process}.csv")
-    dataframe_annual.to_csv(filename_store_annual, index = False)   
-    print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
-
-
-
-# Tries to open Excel File, return None if fails
-def open_excel_file(filename: str, sheetname: str):
-  try:
-    df = pd.read_excel(filename, sheet_name=sheetname)
-    return df
-  except Exception as e:
-    print(f'[WRONG FILE/ SHEET] Failed to open file {filename}: {e}')
-    return None
-  
-
-
-
-# Checking the first sheet => Information Sheet of the excel
-# Return the rounding level if success, otherwise None
-def check_information_sheet(filename: str):
-  try:
-    df = open_excel_file(filename, "1000000")
-    if (df is not None):
-      for _, row in df.iterrows():
-        # Cast row['Unnamed: 2'] to string
-        if ("Level of rounding" in str(row['Unnamed: 2'])):
-          rounding = str(row['Unnamed: 1']).upper()
-          for k, v in ROUNDING_LEVEL_MAPPING.items():
-            if (k in rounding):
-              rounding_val = v
-      return rounding_val
-    else:
-      print(f'[FAILED] Cannot open information sheet in file {filename}. Make sure to input the right file name and sheet name')
-      return None
-    
-  except Exception as e:
-    print(f"[FAILED] Failed to open Information Sheet: {e}")
-    return None
-
-
-
 
 # Used to get the data value where the column name is contained within the list
 def sum_value_equal(df : pd.DataFrame, column_list: list, rounding_val : float):
@@ -272,6 +101,24 @@ def sum_value_range(df : pd.DataFrame, column_start: str, column_end: str, round
     print(f'[ERROR] Column end {column_end} is not found!')
 
   return result_val
+
+
+
+
+
+# Change period and year to date format
+def date_format (period: str, year: str):
+  # period value = ['tw1', 'tw2', 'tw3', 'tw4']
+  period_map = {
+    "tw1" : "-03-31",
+    "tw2" : "-06-30",
+    "tw3" : "-09-30",
+    "tw4" : "-12-31"
+  }
+  return f"{str(year)}{period_map[period]}"
+
+
+
 
 
 
@@ -326,12 +173,12 @@ def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: 
       elif (industry_key_idx == 4): # Finance and Sharia
         balance_sheet_dict['gross_loan'] = sum_value_equal(df, ['Loans third parties', 'Loans related parties'], rounding_val)
         balance_sheet_dict['net_loan'] = none_handling_operation(balance_sheet_dict['gross_loan'],  balance_sheet_dict['allowance_for_loans'], "+", True)
-        balance_sheet_dict['non_loan_assets'] = none_handling_operation(balance_sheet_dict['total_assets'],  balance_sheet_dict['net_loan'], "-", False)
+        balance_sheet_dict['non_loan_assets'] = none_handling_operation(balance_sheet_dict['total_asset'],  balance_sheet_dict['net_loan'], "-", False)
         balance_sheet_dict['total_cash_and_due_from_banks'] = sum_value_equal(df, ['Cash', 'Current accounts with bank Indonesia'], rounding_val) + sum_value_range(df, "Current accounts with other banks", "Allowance for impairment losses for current accounts with other bank", rounding_val)
         balance_sheet_dict['current_account'] = sum_value_range(df, 'Current accounts', "Current accounts related parties", rounding_val)
         balance_sheet_dict['savings_account'] = sum_value_range(df, 'Savings', "Savings related parties", rounding_val)
-        balance_sheet_dict['time_deposits'] = sum_value_range(df, 'Time deposits', "Time deposits related parties", rounding_val)
-        balance_sheet_dict['total_deposits'] = none_handling_operation(none_handling_operation(balance_sheet_dict['current_account'], balance_sheet_dict['savings_account'], "+", True),  balance_sheet_dict['time_deposits'], "+", True)
+        balance_sheet_dict['time_deposit'] = sum_value_range(df, 'Time deposits', "Time deposits related parties", rounding_val)
+        balance_sheet_dict['total_deposit'] = none_handling_operation(none_handling_operation(balance_sheet_dict['current_account'], balance_sheet_dict['savings_account'], "+", True),  balance_sheet_dict['time_deposit'], "+", True)
 
       elif (industry_key_idx == 5): # Securities
         balance_sheet_dict['cash_only'] = sum_value_equal(df, ['Cash and cash equivalents', 'Restricted funds'], rounding_val)
@@ -383,45 +230,45 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
       # Dividing companies based on industries
       # Doing Calculations and Adjustments
       if (industry_key_idx == 1): # General
-        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
-        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
+        income_statement_dict['operating_expense'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
+        income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 2): # Property
-        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
-        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
+        income_statement_dict['operating_expense'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
+        income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 3): # Infrastructure
-        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
-        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expenses'], "+", True)
-        income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
+        income_statement_dict['operating_expense'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
+        income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 4): # Finance and Sharia
-        income_statement_dict['net_interest_income'] = none_handling_operation(income_statement_dict['interest_income'], income_statement_dict['interest_expenses'], '+', False)
-        income_statement_dict['net_premium_income'] = none_handling_operation(income_statement_dict['premium_income'], income_statement_dict['premium_expenses'], '+', False)
+        income_statement_dict['net_interest_income'] = none_handling_operation(income_statement_dict['interest_income'], income_statement_dict['interest_expense'], '+', False)
+        income_statement_dict['net_premium_income'] = none_handling_operation(income_statement_dict['premium_income'], income_statement_dict['premium_expense'], '+', False)
         income_statement_dict['non_interest_income'] = sum_value_range(df, 'Other operating income', "Other operating income", rounding_val)
         income_statement_dict['total_revenue'] = none_handling_operation(none_handling_operation(income_statement_dict['net_interest_income'], income_statement_dict['net_premium_income'], '+', False), income_statement_dict['non_interest_income'], '+', False)
-        income_statement_dict['operating_expenses'] = sum_value_range(df, 'Other operating expenses', "Other operating expenses", rounding_val)
-        income_statement_dict['provision_for_impairment'] = none_handling_operation(sum_value_range(df, "Recovery of impairment loss", "Recovery of estimated loss of commitments and contingency", rounding_val),  sum_value_range(df, "Allowances for impairment losses", "Reversal (expense) of estimated losses on commitments and contingencies", rounding_val), "+", True)
-        income_statement_dict['non_operating_income'] = sum_value_range(df, "Non-operating income and expense", "Share of profit (loss) of joint ventures accounted for using equity method", rounding_val)
+        income_statement_dict['operating_expense'] = sum_value_range(df, 'Other operating expenses', "Other operating expenses", rounding_val)
+        income_statement_dict['provision'] = none_handling_operation(sum_value_range(df, "Recovery of impairment loss", "Recovery of estimated loss of commitments and contingency", rounding_val),  sum_value_range(df, "Allowances for impairment losses", "Reversal (expense) of estimated losses on commitments and contingencies", rounding_val), "+", True)
+        income_statement_dict['non_operating_income_or_loss'] = sum_value_range(df, "Non-operating income and expense", "Share of profit (loss) of joint ventures accounted for using equity method", rounding_val)
         income_statement_dict['net_income'] = none_handling_operation(sum_value_equal(df, ['Total profit (loss)'], rounding_val), income_statement_dict['minorities'], '+', True)
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 5): # Securities
         income_statement_dict['total_revenue'] = sum_value_range(df, "Statement of profit or loss and other comprehensive income", "Gains (losses) on changes in fair value of marketable securities", rounding_val)
-        income_statement_dict['operating_expenses'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
+        income_statement_dict['operating_expense'] = sum_value_equal(df, ['Selling expenses', 'General and administrative expenses'], rounding_val)
         income_statement_dict['operating_income'] = None #TODO
-        # income_statement_dict['non_operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False) 
+        # income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False) 
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
@@ -432,9 +279,9 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
 
       else : # (industry_key_idx == 8): # Financing
         'TODO: waiting unfinalized metrics'
-        income_statement_dict['operating_expenses'] = sum_value_range(df, "Selling expenses", "Other losses", rounding_val)
-        income_statement_dict['gross_income'] = none_handling_operation(income_statement_dict['non_operating_income'], income_statement_dict['operating_expenses'], "+", True)
-        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['non_operating_income'], "-", True)
+        income_statement_dict['operating_expense'] = sum_value_range(df, "Selling expenses", "Other losses", rounding_val)
+        income_statement_dict['gross_income'] = none_handling_operation(income_statement_dict['non_operating_income_or_loss'], income_statement_dict['operating_expense'], "+", True)
+        income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['non_operating_income_or_loss'], "-", True)
         income_statement_dict['total_revenue'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['cost_of_revenue'], "+", True)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
         income_statement_dict['ebitda'] = None #TODO
@@ -485,7 +332,7 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
         cash_flow_dict['total_high_quality_liquid_asset'] = None #TODO
         cash_flow_dict['cash_outflow'] = None #TODO
         cash_flow_dict['cash_inflow'] = None #TODO
-        cash_flow_dict['total_net_cash_outflow'] = None #TODO
+        cash_flow_dict['net_cash_flow'] = None #TODO
         cash_flow_dict['realized_capital_goods_investment'] = None #TODO
 
       return cash_flow_dict
@@ -501,21 +348,69 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
 
 
 
-# Change period and year to date format
-def date_format (period: str, year: str):
-  # period value = ['tw1', 'tw2', 'tw3', 'tw4']
-  period_map = {
-    "tw1" : "-03-31",
-    "tw2" : "-06-30",
-    "tw3" : "-09-30",
-    "tw4" : "-12-31"
-  }
-  return f"{str(year)}{period_map[period]}"
+
+# Call the API to download the Excel file data
+def download_excel_file(url: str, filename:str, use_proxy: bool = False):
+  try:
+    print(f"[DOWNLOAD] Downloading from {url}")
+
+    if (not use_proxy):
+      # Construct the request
+      req = urllib.request.Request(url, headers=create_headers())
+
+      # Open the request and write the response to a file
+      with urllib.request.urlopen(req) as response, open(filename, 'wb') as out_file:
+          data = response.read()  # Read the response data
+          out_file.write(data)    # Write the data to a file
+
+    else:
+      response = requests.get(url, proxies=PROXIES, verify=False)   
+
+      # Write the response content to a file
+      with open(filename, "wb") as out_file:
+          for chunk in response.iter_content(chunk_size=8192):
+              out_file.write(chunk)
+    return True
+  except Exception as e:
+    print(f"[FAILED] Failed to download excel file: {e}")
+    return False
 
 
+# Tries to open Excel File, return None if fails
+def open_excel_file(filename: str, sheetname: str):
+  try:
+    df = pd.read_excel(filename, sheet_name=sheetname)
+    return df
+  except Exception as e:
+    print(f'[WRONG FILE/ SHEET] Failed to open file {filename}: {e}')
+    return None
+  
 
 
+# Checking the first sheet => Information Sheet of the excel
+# Return the rounding level if success, otherwise None
+def check_information_sheet(filename: str):
+  try:
+    df = open_excel_file(filename, "1000000")
+    if (df is not None):
+      for _, row in df.iterrows():
+        # Cast row['Unnamed: 2'] to string
+        if ("Level of rounding" in str(row['Unnamed: 2'])):
+          rounding = str(row['Unnamed: 1']).upper()
+          for k, v in ROUNDING_LEVEL_MAPPING.items():
+            if (k in rounding):
+              rounding_val = v
+      return rounding_val
+    else:
+      print(f'[FAILED] Cannot open information sheet in file {filename}. Make sure to input the right file name and sheet name')
+      return None
+    
+  except Exception as e:
+    print(f"[FAILED] Failed to open Information Sheet: {e}")
+    return None
 
+
+# Process the data of a certain excel file
 def process_excel(symbol: str, period: str, year : int, filename: str, process : int):
   try:
     # Get industry_key_idx
@@ -544,11 +439,11 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
     cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], mapping_dict['cf_metrics'], rounding_val, industry_key_idx)
 
     # Update and combine dictionary
-    result_dict['balance_sheet_metrics'] = json.dumps(balance_sheet_data)
-    result_dict['income_stmt_metrics'] = json.dumps(income_statement_data)
-    result_dict['cash_flow_metrics'] = json.dumps(cash_flow_data)
+    result_dict['balance_sheet_metrics'] = balance_sheet_data
+    result_dict['income_stmt_metrics'] = income_statement_data
+    result_dict['cash_flow_metrics'] = cash_flow_data
 
-    # # for printing only
+    # # For printing only
     # for k, v in result_dict.items():
     #   print(f"\t[{k} => {v}]")
     
@@ -556,3 +451,119 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
   except Exception as e:
     print(f'[FAILED P{process}] Cannot get the data of {symbol} period {period} year {year}: {e}')
     return None
+
+
+
+
+# Main function to process the combined data (as a dataframe)
+def process_dataframe(df: pd.DataFrame, process: int = 1):
+  scrapped_symbol_list = df['symbol'].unique()
+  data_length = len(df)
+  symbol_data_length = len(scrapped_symbol_list)
+
+  print(f"[PROGRESS] {data_length} data of {symbol_data_length} companies are available to be scraped")
+
+  # Range limit is the symbol of file to be downloaded and processed at a time
+  start_idx = 0
+  range_limit = 5
+
+  # Container for Data
+  result_data_list_quarter = list()
+  result_data_list_annual = list()
+
+  while (start_idx < symbol_data_length):
+    range_idx = min(symbol_data_length - start_idx, range_limit)
+
+    # Iterate each symbol based on the range_limit
+    for symbol in scrapped_symbol_list[start_idx:start_idx+range_idx]:
+      curr_symbol_df = df[df['symbol'] == symbol]
+      
+      # MARK
+      # Download excel file
+      for _, row in curr_symbol_df.iterrows():
+        # File name to be saved
+        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+    
+        # Make 3 attempts to download the file
+        attempt = 1
+        limit_attempts = 3
+        download_return = False
+        while (attempt <= limit_attempts and not download_return):
+          download_return = download_excel_file(url, filename, False)
+          attempt += 1
+          if (not download_return):
+            if (attempt > limit_attempts):
+              print(f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts")
+            else:
+              print(f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying...")
+    
+        time.sleep(1)
+
+      # Check the industry of the company the code of the balance sheet
+      # Check the code of the Balance Sheet to determine the industry
+      for _, row in curr_symbol_df.iterrows():
+        filename = os.path.join(DATA_IDX_SHEETS_DIR, f"{row['symbol']}_{row['year']}_{row['period']}.xlsx")
+        # Open work book, try to get the industry code
+        try:
+          # Process each excel data
+          data = process_excel(row['symbol'], row['period'], row['year'], filename, process)
+          if (data is not None):
+            # For quarter data, needs further handling. 
+            # On the other side, for annual data, we can directly insert into the store
+            if (row['symbol'] == "tw4"):
+              result_data_list_annual.append(data)
+
+            print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
+
+          # MARK
+          # Delete the excel file if the data has been processed
+          os.remove(filename)
+
+          # Further handling for quarter data
+          # TODO: Untuk income statement data quarter tuh perlu diselisihin untuk benar benar dapet data yang quarter itu doang
+
+          # 1. Fetch from supabase the data of the previous quarter
+          # TODO
+
+          # 2. Process the difference for income statement data
+          # TODO
+          income_statement_data = data['income_stmt_metrics']
+
+
+          data['balance_sheet_metrics'] = json.dumps(data['balance_sheet_metrics'])
+          data['income_stmt_metrics'] = json.dumps(data['income_stmt_metrics'])
+          data['cash_flow_metrics'] = json.dumps(data['cash_flow_metrics'])
+
+          # Insert all the data in current_symbol_list_data to result_data_list
+          result_data_list_quarter.append(data)
+
+
+
+            # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
+        except Exception as e:
+          print(f"[FAILED] Failed to open and process {filename} : {e}")
+
+      
+    # break # for testing
+    # Incremental
+    start_idx += range_idx
+
+  # MARK
+  # Save quarter data
+  if (len(result_data_list_quarter) != 0):
+    dataframe_quarter = pd.DataFrame(result_data_list_quarter)
+    filename_store_quarter = os.path.join(DATA_PROCESSED_DIR, f"data_quarter_P{process}.csv")
+    dataframe_quarter.to_csv(filename_store_quarter, index = False)   
+    print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
+  
+
+
+  # MARK
+  # Save annual data
+  if (len(result_data_list_annual) != 0):
+    dataframe_annual = pd.DataFrame(result_data_list_annual)
+    filename_store_annual = os.path.join(DATA_PROCESSED_DIR, f"data_annual_P{process}.csv")
+    dataframe_annual.to_csv(filename_store_annual, index = False)   
+    print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
+

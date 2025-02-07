@@ -242,10 +242,10 @@ if __name__ == "__main__":
 
   # Process Program
   # [LOOK] idx_process.py
-  p1 = Process(target=process_dataframe, args=(all_data[:i1], 1))
-  p2 = Process(target=process_dataframe, args=(all_data[i1:i2], 2))
-  p3 = Process(target=process_dataframe, args=(all_data[i2:i3], 3))
-  p4 = Process(target=process_dataframe, args=(all_data[i3:], 4))
+  p1 = Process(target=process_dataframe, args=(all_data[:i1], period_arg,  1))
+  p2 = Process(target=process_dataframe, args=(all_data[i1:i2], period_arg, 2))
+  p3 = Process(target=process_dataframe, args=(all_data[i2:i3], period_arg, 3))
+  p4 = Process(target=process_dataframe, args=(all_data[i3:], period_arg, 4))
 
   p1.start()
   p2.start()
