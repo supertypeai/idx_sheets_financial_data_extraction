@@ -97,7 +97,8 @@ CASH_FLOW_METRICS_NON_BANK = ["net_operating_cash_flow",
 
 # MAPPING FORMAT 
 # DICT = {
-# [ENGLISH NAME IN IDX SHEETS]:  [NEW NAME]}
+# [ENGLISH NAME IN IDX SHEETS]:  [NEW NAME]
+# }
 
 # Mapping For General Industry
 # Only be used for data that can be directly selected, without calculation

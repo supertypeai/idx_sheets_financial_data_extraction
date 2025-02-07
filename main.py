@@ -25,7 +25,7 @@ Automatically scrape and extract based on current time
 Interveral (3*30 + 7) for Annual
 Interval (30 + 7) for Quarter
 
-if it is run in:
+if it runs in:
   Month 3: 
   -> get annual and Q4 of last year
   Month 4:
@@ -46,7 +46,7 @@ BATCH = [1, 2, 3, 4, all]
 => For manual start:
 Command:
 python main.py {BATCH} {YEAR} {PERIOD}
-e.g.: python main.py 2024 tw1   #Scrape and extract Q1 of 2024
+e.g.: python main.py 1 2024 tw1   #Scrape and extract Q1 of 2024 for batch 1
 
 Description:
 program requires two parameters: {year} and {PERIOD}
