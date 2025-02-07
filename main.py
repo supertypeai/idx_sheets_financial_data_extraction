@@ -169,7 +169,7 @@ if __name__ == "__main__":
     if (current_month == 3): # Get Annual and Q4 last year
       period_arg = "audit"
       year_arg = int(current_time.year) - 1
-    elif (current_month in [4,7,10]): # 4, 7, 10 # Get Q1, Q2, Q3 this year
+    elif (current_month in [5,8,11]): # 5, 8, 11 # Get Q1, Q2, Q3 this year
       last_quarter = current_time - timedelta(30)
       month = int(last_quarter.month)
       month_arg_idx = max((month - 1)//3, 0)
