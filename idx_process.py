@@ -122,8 +122,6 @@ def date_format (period: str, year: str):
 
 
 
-
-
 # Process balance sheet 
 def process_balance_sheet(filename: str, sheet_code_list: list, column_mapping: dict, metrics: list, rounding_val: float, industry_key_idx: int):
   # Balance Sheet
@@ -327,7 +325,7 @@ def process_cash_flow(filename: str, sheet_code_list: list, column_mapping: dict
       # Doing Calculations and Adjustments
       if (industry_key_idx in [1, 2, 3, 5, 6, 8]):
         cash_flow_dict['capital_expenditure'] = sum_value_range(df, "Cash flows from investing activities", "Other cash inflows (outflows) from investing activities", rounding_val, "Payments") 
-        cash_flow_dict['free_cash_flow'] = none_handling_operation(cash_flow_dict['net_operating_cash_flow'], cash_flow_dict['capital_expenditure'], "+", False)
+        cash_flow_dict['free_cash_flow'] = none_handling_operation(cash_flow_dict['operating_cash_flow'], cash_flow_dict['capital_expenditure'], "+", False)
       else: # (industry_key == 4)
         cash_flow_dict['total_high_quality_liquid_asset'] = None #TODO
         cash_flow_dict['cash_outflow'] = None #TODO
@@ -456,7 +454,7 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
 
 
 # Main function to process the combined data (as a dataframe)
-def process_dataframe(df: pd.DataFrame, process: int = 1):
+def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process: int = 1):
   scrapped_symbol_list = df['symbol'].unique()
   data_length = len(df)
   symbol_data_length = len(scrapped_symbol_list)
@@ -525,6 +523,8 @@ def process_dataframe(df: pd.DataFrame, process: int = 1):
 
           # 1. Fetch from supabase the data of the previous quarter
           # TODO
+          current_period = "tw4" if period_arg == "audit" else period_arg
+          current_period_in_date = date_format(current_period, year_arg)
 
           # 2. Process the difference for income statement data
           # TODO
