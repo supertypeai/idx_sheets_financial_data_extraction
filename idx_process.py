@@ -454,7 +454,7 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
 
 
 # Main function to process the combined data (as a dataframe)
-def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process: int = 1):
+def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, previous_period_data: pd.DataFrame = None, process: int = 1):
   scrapped_symbol_list = df['symbol'].unique()
   data_length = len(df)
   symbol_data_length = len(scrapped_symbol_list)
@@ -509,7 +509,7 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process:
           if (data is not None):
             # For quarter data, needs further handling. 
             # On the other side, for annual data, we can directly insert into the store
-            if (row['symbol'] == "tw4"):
+            if (row['period'] == "tw4"):
               result_data_list_annual.append(data)
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
@@ -519,24 +519,30 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process:
           os.remove(filename)
 
           # Further handling for quarter data
-          # TODO: Untuk income statement data quarter tuh perlu diselisihin untuk benar benar dapet data yang quarter itu doang
+          quarter_data = data.copy()
+          # current_period = "tw4" if period_arg == "audit" else period_arg
+          # current_period_in_date = date_format(current_period, year_arg)
 
-          # 1. Fetch from supabase the data of the previous quarter
-          # TODO
-          current_period = "tw4" if period_arg == "audit" else period_arg
-          current_period_in_date = date_format(current_period, year_arg)
+          # Process the difference for income statement data
+          if previous_period_data is not None:
+            previous_income_statement_entry = previous_period_data.loc[row["symbol"], "income_stmt_metrics"]
+            previous_income_statement_data = json.loads(previous_income_statement_entry)
+            print(previous_income_statement_data)
+            income_statement_data = dict()
 
-          # 2. Process the difference for income statement data
-          # TODO
-          income_statement_data = data['income_stmt_metrics']
+            for key, value in quarter_data['income_stmt_metrics'].items():
+              print(f"new_data = {key}, {previous_income_statement_data[key]}")
+              new_val = previous_income_statement_data.get(key, None)
+              income_statement_data[key] = none_handling_operation(value, new_val, "-", False)
 
+            quarter_data['income_stmt_metrics_actual'] = json.dumps(income_statement_data)
 
-          data['balance_sheet_metrics'] = json.dumps(data['balance_sheet_metrics'])
-          data['income_stmt_metrics'] = json.dumps(data['income_stmt_metrics'])
-          data['cash_flow_metrics'] = json.dumps(data['cash_flow_metrics'])
+          quarter_data['balance_sheet_metrics'] = json.dumps(quarter_data['balance_sheet_metrics'])
+          quarter_data['income_stmt_metrics'] = json.dumps(quarter_data['income_stmt_metrics'])
+          quarter_data['cash_flow_metrics'] = json.dumps(quarter_data['cash_flow_metrics'])
 
           # Insert all the data in current_symbol_list_data to result_data_list
-          result_data_list_quarter.append(data)
+          result_data_list_quarter.append(quarter_data)
 
 
 

@@ -1,17 +1,12 @@
 import pandas as pd
 import os
-from supabase import create_client
-from dotenv import load_dotenv
-import time
 import time
 from multiprocessing import Process
 from idx_process import  process_dataframe
 from idx_scrape_url import fetch_url, get_data
 import sys
-from idx_utils import PERIOD_LIST, DATA_IDX_URL_DIR, DATA_PROCESSED_DIR, DATA_RESULT_DIR
+from idx_utils import PERIOD_LIST, DATA_IDX_URL_DIR, DATA_PROCESSED_DIR, DATA_RESULT_DIR, supabase_client
 from datetime import datetime, timedelta
-
-load_dotenv()
 
 '''
 HOW TO START:
@@ -58,6 +53,7 @@ BATCH = [1, 2, 3, 4, all]
   3 => Third quarter
   4 => Last quarter
   all => scrape for all in the database
+PREVIOUS_PERIOD_DATA => data of previous period for quarterly data
 
 '''
 
@@ -97,7 +93,7 @@ def combine_url_data():
 
   return all_data
 
-def combine_processed_data():
+def combine_processed_data(year, period):
 
   data_quarter_path = [os.path.join(DATA_PROCESSED_DIR,f'data_quarter_P{i}.csv') for i in range(1,5)]
   data_annual_path = [os.path.join(DATA_PROCESSED_DIR,f'data_annual_P{i}.csv') for i in range(1,5)]
@@ -119,7 +115,7 @@ def combine_processed_data():
   # Save
   if (quarter_data is not None):
     quarter_data = quarter_data.drop(['industry_code'], axis=1)
-    quarter_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_quarter_result.csv"), index=False)
+    quarter_data.to_csv(os.path.join(DATA_RESULT_DIR, f"data_quarter_result_{year}_{period}.csv"), index=False)
 
   for i in range(len(data_annual_path)):
     try:
@@ -135,7 +131,7 @@ def combine_processed_data():
   # Save
   if(annual_data is not None):
     annual_data = annual_data.drop(['industry_code'], axis=1)
-    annual_data.to_csv(os.path.join(DATA_RESULT_DIR, "data_annual_result.csv"), index=False)
+    annual_data.to_csv(os.path.join(DATA_RESULT_DIR, f"data_annual_result_{year}_{period}.csv"), index=False)
 
   return quater_data, annual_data
 
@@ -145,14 +141,8 @@ def combine_processed_data():
 
 if __name__ == "__main__":
 
-  # Connection to Supabase
-  url_supabase = os.getenv("SUPABASE_URL")
-  key = os.getenv("SUPABASE_KEY")
-  supabase = create_client(url_supabase, key)
-
-  
   if (len(sys.argv) > 2):
-    assert len(sys.argv) == 4, "[ERROR] Invalid argument input!"
+    assert len(sys.argv) >= 4, "[ERROR] Invalid argument input!"
 
     # Read running argument
     batch_arg = sys.argv[1]
@@ -160,6 +150,14 @@ if __name__ == "__main__":
     period_arg = sys.argv[3]
   
     assert period_arg in PERIOD_LIST, "[ERROR] Invalid period argument!"
+
+    prev_period_data = None
+    try:
+      # Load previous period data for quarterly data
+      prev_period_data = pd.read_csv(sys.argv[4])
+      prev_period_data.set_index("symbol", inplace=True)
+    except IndexError:
+      pass
 
   else:
 
@@ -181,8 +179,9 @@ if __name__ == "__main__":
   ######################
     
   # Get the table
-  db_data = supabase.table("idx_active_company_profile").select("symbol").execute()
+  db_data = supabase_client.table("idx_active_company_profile").select("symbol").execute()
   df_db_data = pd.DataFrame(db_data.data)
+  # df_db_data = df_db_data.loc[1:10,]
   symbol_list : list = df_db_data['symbol'].unique().tolist()
   print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
@@ -242,10 +241,10 @@ if __name__ == "__main__":
 
   # Process Program
   # [LOOK] idx_process.py
-  p1 = Process(target=process_dataframe, args=(all_data[:i1], period_arg, year_arg,  1))
-  p2 = Process(target=process_dataframe, args=(all_data[i1:i2], period_arg, year_arg, 2))
-  p3 = Process(target=process_dataframe, args=(all_data[i2:i3], period_arg, year_arg, 3))
-  p4 = Process(target=process_dataframe, args=(all_data[i3:], period_arg, year_arg, 4))
+  p1 = Process(target=process_dataframe, args=(all_data[:i1], period_arg, year_arg, prev_period_data, 1))
+  p2 = Process(target=process_dataframe, args=(all_data[i1:i2], period_arg, year_arg, prev_period_data, 2))
+  p3 = Process(target=process_dataframe, args=(all_data[i2:i3], period_arg, year_arg, prev_period_data, 3))
+  p4 = Process(target=process_dataframe, args=(all_data[i3:], period_arg, year_arg, prev_period_data, 4))
 
   p1.start()
   p2.start()
@@ -263,7 +262,7 @@ if __name__ == "__main__":
   print(f"The processing execution time: {time.strftime('%H:%M:%S', time.gmtime(processing_duration))}")
 
   # Combine processed data
-  data = combine_processed_data()
+  data = combine_processed_data(year_arg, period_arg)
 
 
 
