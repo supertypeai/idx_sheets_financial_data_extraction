@@ -322,16 +322,16 @@ def process_additional_metrics(filename: str, sheet_mapping: list[tuple[list[str
     # Dividing companies based on industries
     # Doing Calculations and Adjustments
     if (industry_key_idx == 1):  # General
-      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "-")
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
 
     elif (industry_key_idx == 2):  # Property
-      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "-")
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
 
     elif (industry_key_idx == 3): # Infrastructure
-      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "-")
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
 
     elif (industry_key_idx == 4):  # Finance and Sharia
-      pass
+      additional_metrics_dict["ebitda"] = None  # TODO
 
     elif (industry_key_idx == 5):  # Securities
       additional_metrics_dict["ebitda"] = None  # TODO
@@ -490,7 +490,10 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
     cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], mapping_dict['cf_metrics'], rounding_val, industry_key_idx)
     print(f"[ADD P{process}] Processing Additional Metrics ...")
     additional_data = process_additional_metrics(filename, mapping_dict["additional_mapping"], income_statement_data, rounding_val, industry_key_idx)
-    income_statement_data["ebitda"] = additional_data["ebitda"]
+    try:
+      income_statement_data["ebitda"] = additional_data["ebitda"]
+    except:
+      print(f"[ADD P{process}] Fail to insert Additional Metrics")
 
     # Update and combine dictionary
     result_dict['balance_sheet_metrics'] = balance_sheet_data
@@ -581,17 +584,18 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, previous
 
           # Process the difference for income statement data
           if previous_period_data is not None:
-            previous_income_statement_entry = previous_period_data.loc[row["symbol"], "income_stmt_metrics"]
-            previous_income_statement_data = json.loads(previous_income_statement_entry)
-            print(previous_income_statement_data)
-            income_statement_data = dict()
+            try:
+              previous_income_statement_entry = previous_period_data.loc[row["symbol"], "income_stmt_metrics"]
+              previous_income_statement_data = json.loads(previous_income_statement_entry)
+              income_statement_data = dict()
 
-            for key, value in quarter_data['income_stmt_metrics'].items():
-              print(f"new_data = {key}, {previous_income_statement_data[key]}")
-              new_val = previous_income_statement_data.get(key, None)
-              income_statement_data[key] = none_handling_operation(value, new_val, "-", False)
+              for key, value in quarter_data['income_stmt_metrics'].items():
+                new_val = previous_income_statement_data.get(key, None)
+                income_statement_data[key] = none_handling_operation(value, new_val, "-", False)
 
-            quarter_data['income_stmt_metrics_actual'] = json.dumps(income_statement_data)
+              quarter_data['income_stmt_metrics_actual'] = json.dumps(income_statement_data)
+            except:
+              print(f"[Q P{process}] Unable to get previous quarter data")
 
           quarter_data['balance_sheet_metrics'] = json.dumps(quarter_data['balance_sheet_metrics'])
           quarter_data['income_stmt_metrics'] = json.dumps(quarter_data['income_stmt_metrics'])

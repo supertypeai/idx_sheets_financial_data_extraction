@@ -58,7 +58,7 @@ PREVIOUS_PERIOD_DATA => data of previous period for quarterly data
 '''
 
 # Combine scrapped data from the csv files
-def combine_url_data():
+def combine_url_data(year: str, period: str):
   failed_file_path = [os.path.join(DATA_IDX_URL_DIR,f'failed_list_P{i}.csv') for i in range(1,5)]
   data_file_path = [os.path.join(DATA_IDX_URL_DIR,f'scrapped_list_P{i}.csv') for i in range(1,5)]
 
@@ -89,11 +89,11 @@ def combine_url_data():
       os.remove(file_path)
     except Exception as e:
       print(f"[FAILED] There is no failed data: {file_path}")
-  failed_data.to_csv(os.path.join(DATA_RESULT_DIR, 'data_failed.csv'), index=False)
+  failed_data.to_csv(os.path.join(DATA_RESULT_DIR, f"data_failed_{year}_{period}.csv"), index=False)
 
   return all_data
 
-def combine_processed_data(year, period):
+def combine_processed_data(year: str, period: str):
 
   data_quarter_path = [os.path.join(DATA_PROCESSED_DIR,f'data_quarter_P{i}.csv') for i in range(1,5)]
   data_annual_path = [os.path.join(DATA_PROCESSED_DIR,f'data_annual_P{i}.csv') for i in range(1,5)]
@@ -179,9 +179,9 @@ if __name__ == "__main__":
   ######################
     
   # Get the table
-  db_data = supabase_client.table("idx_active_company_profile").select("symbol").execute()
+  current_year_end = datetime(year_arg + 1, 1, 1).isoformat()
+  db_data = supabase_client.table("idx_active_company_profile").select("symbol").lt("listing_date",current_year_end).execute()
   df_db_data = pd.DataFrame(db_data.data)
-  # df_db_data = df_db_data.loc[1:10,]
   symbol_list : list = df_db_data['symbol'].unique().tolist()
   print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
   ##############################
 
   # Combine scrapped data
-  all_data = combine_url_data()
+  all_data = combine_url_data(year_arg, period_arg)
 
   # Use multiprocess to increase efficiency
   length_list = len(all_data)
