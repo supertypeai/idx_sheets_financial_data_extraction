@@ -131,6 +131,12 @@ GENERAL_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+GENERAL_ADDITIONAL_MAPPING = [
+    (["1670000"],
+     {
+         "depreciation_amortization": ["Depreciation", "Amortizaion"]
+     })
+]
 
 
 
@@ -166,6 +172,12 @@ PROPERTY_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+PROPERTY_ADDITIONAL_MAPPING = [
+    (["2670000"],
+     {
+         "depreciation_amortization": ["Depreciation", "Amortizaion"]
+     })
+]
 
 
 
@@ -202,6 +214,12 @@ INFRASTRUCTURE_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+INFRASTRUCTURE_ADDITIONAL_MAPPING = [
+    (["3312000"],
+     {
+         "depreciation_amortization": ["Depreciation and amortisation expenses"]
+     })
+]
 
 
 
@@ -235,6 +253,8 @@ FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+FINANCE_SHARIA_ADDITIONAL_MAPPING = [
+]
 
 
 
@@ -261,6 +281,8 @@ SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+SECURITIES_ADDITIONAL_MAPPING = [
+]
 
 
 
@@ -290,6 +312,8 @@ INSURANCE_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+INSURANCE_ADDITIONAL_MAPPING = [
+]
 
 
 
@@ -320,6 +344,8 @@ FINANCING_CASH_FLOW_COLUMN_MAPPING = {
   "Total net cash flows received from (used in) financing activities" : "financing_cash_flow",
   "Total net increase (decrease) in cash and cash equivalents" : "net_increased_decreased",
 }
+FINANCING_ADDITIONAL_MAPPING = [
+]
 
 
 
@@ -335,7 +361,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : GENERAL_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : GENERAL_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : GENERAL_ADDITIONAL_MAPPING
   },
   2 : {
     'bs_sheet_code' : PROPERTY_BALANCE_SHEET_SHEET_CODE,
@@ -346,7 +373,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : PROPERTY_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : PROPERTY_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : PROPERTY_ADDITIONAL_MAPPING
   },
   3 : {
     'bs_sheet_code' : INFRASTRUCTURE_BALANCE_SHEET_SHEET_CODE,
@@ -357,7 +385,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : INFRASTRUCTURE_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : INFRASTRUCTURE_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : INFRASTRUCTURE_ADDITIONAL_MAPPING
   },
   4 : {
     'bs_sheet_code' : FINANCE_SHARIA_BALANCE_SHEET_SHEET_CODE,
@@ -368,7 +397,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_BANK,
     'cf_sheet_code' : FINANCE_SHARIA_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_BANK,
+    "additional_mapping" : FINANCE_SHARIA_ADDITIONAL_MAPPING
   },
   5 : {
     'bs_sheet_code' : SECURITIES_BALANCE_SHEET_SHEET_CODE,
@@ -379,7 +409,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : SECURITIES_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : SECURITIES_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : SECURITIES_ADDITIONAL_MAPPING
   },
   6 : {
     'bs_sheet_code' : INSURANCE_BALANCE_SHEET_SHEET_CODE,
@@ -390,7 +421,8 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : INSURANCE_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : INSURANCE_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : INSURANCE_ADDITIONAL_MAPPING
   },
   8 : {
     'bs_sheet_code' : FINANCING_BALANCE_SHEET_SHEET_CODE,
@@ -401,6 +433,7 @@ UNIVERSAL_MAPPING = {
     'is_metrics' : INCOME_STATEMENT_METRICS_NON_BANK,
     'cf_sheet_code' : FINANCING_CASH_FLOW_SHEET_CODE,
     'cf_column_mapping' : FINANCING_CASH_FLOW_COLUMN_MAPPING,
-    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK
+    'cf_metrics' : CASH_FLOW_METRICS_NON_BANK,
+    "additional_mapping" : FINANCING_ADDITIONAL_MAPPING
   },
 }

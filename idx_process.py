@@ -118,6 +118,27 @@ def date_format (period: str, year: str):
   return f"{str(year)}{period_map[period]}"
 
 
+def load_data_dict(filename: str, sheet_mapping: list[tuple[list[str], dict[str, list[str]]]], rounding_val: float):
+  # Create dict using metrics template
+  combined_dict = dict()
+  for sheet_codes, mapping in sheet_mapping:
+    data_dict = dict()
+    for metric in mapping.keys():
+      data_dict[metric] = None
+
+    for sheet_name in sheet_codes:
+      df = open_excel_file(filename, sheet_name)
+      if df is not None:
+        break
+
+    if df is not None:
+      # Iterate for data that can be directly selected
+      for metric, sheet_rows in mapping.items():
+        data_dict[metric] = sum_value_equal(df, sheet_rows, rounding_val)
+
+    combined_dict.update(data_dict)
+
+  return combined_dict
 
 
 
@@ -232,7 +253,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
         income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 2): # Property
@@ -240,7 +260,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
         income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 3): # Infrastructure
@@ -248,7 +267,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['operating_expense'], "+", True)
         income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'],  income_statement_dict['operating_income'], "-", False)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 4): # Finance and Sharia
@@ -268,7 +286,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['operating_income'] = None #TODO
         # income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False) 
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       elif (industry_key_idx == 6): # Insurance
@@ -282,7 +299,6 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
         income_statement_dict['operating_income'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['non_operating_income_or_loss'], "-", True)
         income_statement_dict['total_revenue'] = none_handling_operation(income_statement_dict['gross_income'], income_statement_dict['cost_of_revenue'], "+", True)
         income_statement_dict['ebit'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['interest_expense_non_operating'], "+", False)
-        income_statement_dict['ebitda'] = None #TODO
         income_statement_dict['diluted_shares_outstanding'] = (sum_value_equal(df, ['Profit (loss) attributable to parent entity'], rounding_val) /  sum_value_equal(df, ['Basic earnings (loss) per share from continuing operations'], rounding_val))
 
       return income_statement_dict
@@ -294,6 +310,43 @@ def process_income_statement(filename: str, sheet_code_list: list, column_mappin
     print(f"[FAILED] Failed to process Income Statement data of {filename}: {e}")
     return None  
 
+
+# Process additional metrics spanning multiple sheets
+def process_additional_metrics(filename: str, sheet_mapping: list[tuple[list[str], dict[str, list[str]]]], additional_data: dict, rounding_val: float, industry_key_idx: int):
+  # Additional metrics
+  try:
+    loaded_metrics = load_data_dict(filename, sheet_mapping, rounding_val)
+    # Create dict using metrics template
+    additional_metrics_dict = dict()
+
+    # Dividing companies based on industries
+    # Doing Calculations and Adjustments
+    if (industry_key_idx == 1):  # General
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
+
+    elif (industry_key_idx == 2):  # Property
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
+
+    elif (industry_key_idx == 3): # Infrastructure
+      additional_metrics_dict["ebitda"] = none_handling_operation(additional_data["ebit"], loaded_metrics["depreciation_amortization"], "+")
+
+    elif (industry_key_idx == 4):  # Finance and Sharia
+      additional_metrics_dict["ebitda"] = None  # TODO
+
+    elif (industry_key_idx == 5):  # Securities
+      additional_metrics_dict["ebitda"] = None  # TODO
+
+    elif (industry_key_idx == 6):  # Insurance
+      additional_metrics_dict["ebitda"] = None  # TODO
+
+    else:  # (industry_key_idx == 8): # Financing
+      additional_metrics_dict["ebitda"] = None  # TODO
+
+    return additional_metrics_dict
+
+  except Exception as e:
+    print(f"[FAILED] Failed to process additional metrics of {filename}: {e}")
+    return None
 
 
 # Process cash flow
@@ -435,6 +488,12 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
     income_statement_data = process_income_statement(filename, mapping_dict['is_sheet_code'], mapping_dict['is_column_mapping'], mapping_dict['is_metrics'], rounding_val, industry_key_idx)
     print(f"[CF P{process}] Processing Cash Flow ...")
     cash_flow_data = process_cash_flow(filename, mapping_dict['cf_sheet_code'], mapping_dict['cf_column_mapping'], mapping_dict['cf_metrics'], rounding_val, industry_key_idx)
+    print(f"[ADD P{process}] Processing Additional Metrics ...")
+    additional_data = process_additional_metrics(filename, mapping_dict["additional_mapping"], income_statement_data, rounding_val, industry_key_idx)
+    try:
+      income_statement_data["ebitda"] = additional_data["ebitda"]
+    except:
+      print(f"[ADD P{process}] Fail to insert Additional Metrics")
 
     # Update and combine dictionary
     result_dict['balance_sheet_metrics'] = balance_sheet_data
@@ -454,7 +513,7 @@ def process_excel(symbol: str, period: str, year : int, filename: str, process :
 
 
 # Main function to process the combined data (as a dataframe)
-def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process: int = 1):
+def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, previous_period_data: pd.DataFrame = None, process: int = 1):
   scrapped_symbol_list = df['symbol'].unique()
   data_length = len(df)
   symbol_data_length = len(scrapped_symbol_list)
@@ -509,7 +568,7 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process:
           if (data is not None):
             # For quarter data, needs further handling. 
             # On the other side, for annual data, we can directly insert into the store
-            if (row['symbol'] == "tw4"):
+            if (row['period'] == "tw4"):
               result_data_list_annual.append(data)
 
             print(f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}")
@@ -519,24 +578,31 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, process:
           os.remove(filename)
 
           # Further handling for quarter data
-          # TODO: Untuk income statement data quarter tuh perlu diselisihin untuk benar benar dapet data yang quarter itu doang
+          quarter_data = data.copy()
+          # current_period = "tw4" if period_arg == "audit" else period_arg
+          # current_period_in_date = date_format(current_period, year_arg)
 
-          # 1. Fetch from supabase the data of the previous quarter
-          # TODO
-          current_period = "tw4" if period_arg == "audit" else period_arg
-          current_period_in_date = date_format(current_period, year_arg)
+          # Process the difference for income statement data
+          if previous_period_data is not None:
+            try:
+              previous_income_statement_entry = previous_period_data.loc[row["symbol"], "income_stmt_metrics"]
+              previous_income_statement_data = json.loads(previous_income_statement_entry)
+              income_statement_data = dict()
 
-          # 2. Process the difference for income statement data
-          # TODO
-          income_statement_data = data['income_stmt_metrics']
+              for key, value in quarter_data['income_stmt_metrics'].items():
+                new_val = previous_income_statement_data.get(key, None)
+                income_statement_data[key] = none_handling_operation(value, new_val, "-", False)
 
+              quarter_data['income_stmt_metrics_actual'] = json.dumps(income_statement_data)
+            except:
+              print(f"[Q P{process}] Unable to get previous quarter data")
 
-          data['balance_sheet_metrics'] = json.dumps(data['balance_sheet_metrics'])
-          data['income_stmt_metrics'] = json.dumps(data['income_stmt_metrics'])
-          data['cash_flow_metrics'] = json.dumps(data['cash_flow_metrics'])
+          quarter_data['balance_sheet_metrics'] = json.dumps(quarter_data['balance_sheet_metrics'])
+          quarter_data['income_stmt_metrics'] = json.dumps(quarter_data['income_stmt_metrics'])
+          quarter_data['cash_flow_metrics'] = json.dumps(quarter_data['cash_flow_metrics'])
 
           # Insert all the data in current_symbol_list_data to result_data_list
-          result_data_list_quarter.append(data)
+          result_data_list_quarter.append(quarter_data)
 
 
 

@@ -1,5 +1,9 @@
 import os
 import random
+from dotenv import load_dotenv
+from supabase import create_client
+
+load_dotenv()
 
 DATA_IDX_SHEETS_DIR = os.path.join(os.getcwd(), "data_idx_sheets")
 DATA_IDX_URL_DIR = os.path.join(os.getcwd(), "data_idx_url")
@@ -33,3 +37,9 @@ def create_headers():
   used_headers['User-Agent'] = used_user_agent
   # print(used_headers)
   return used_headers
+
+
+# Connection to Supabase
+_SUPABASE_URL = os.getenv("SUPABASE_URL")
+_SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase_client = create_client(_SUPABASE_URL, _SUPABASE_KEY)
