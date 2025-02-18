@@ -1,1 +1,0 @@
-Contains mapping URL to IDX's API

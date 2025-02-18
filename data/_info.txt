@@ -1,0 +1,4 @@
+Contains all csv data, with details:
+1. url_list.csv : contains the mapping of symbol to IDX's API 
+2. failed_list.csv : contains failed data to be scrapped from IDX's API
+3. result_list.csv : contains processed and finalized data 
