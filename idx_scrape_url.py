@@ -8,11 +8,9 @@ import json
 import time
 import pandas as pd
 import os
-from datetime import datetime
 from dotenv import load_dotenv
 import requests
 import warnings
-from multiprocessing import Queue
 
 load_dotenv()
 
@@ -67,7 +65,7 @@ def fetch_url(
         return None
 
 
-def get_data(symbol_list: list, process: int, year: int, period: str, q: Queue):
+def get_data(symbol_list: list, process: int, year: int, period: str, shared_list: list):
     RESULT_LIST = []
     FAILED_LIST = []
     count = 0
@@ -108,4 +106,4 @@ def get_data(symbol_list: list, process: int, year: int, period: str, q: Queue):
         if count % 20 == 0:
             print(f"[CHECKPOINT] P{process} has covered {count} data")
 
-    q.put((RESULT_LIST, FAILED_LIST))
+    shared_list.append((RESULT_LIST, FAILED_LIST))

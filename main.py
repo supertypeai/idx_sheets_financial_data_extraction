@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import time
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Manager
 from idx_process import process_dataframe
 from idx_scrape_url import fetch_url, get_data
 import sys
@@ -133,26 +133,29 @@ if __name__ == "__main__":
     # Start time
     start = time.time()
 
-    # Using multiprocessing queue
-    q = Queue()
+    # Initiate manager for shared_list
+    manager = Manager()
+
+    # Using multiprocessing sharedlist
+    shared_list = manager.list()
 
     # Scraper Program
     # [LOOK] idx_scrape_url.py
     p1 = Process(
         target=get_data,
-        args=(symbol_list[start_idx : start_idx + i1], 1, year_arg, period_arg, q),
+        args=(symbol_list[start_idx : start_idx + i1], 1, year_arg, period_arg, shared_list),
     )
     p2 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i1 : start_idx + i2], 2, year_arg, period_arg, q),
+        args=(symbol_list[start_idx + i1 : start_idx + i2], 2, year_arg, period_arg, shared_list),
     )
     p3 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i2 : start_idx + i3], 3, year_arg, period_arg, q),
+        args=(symbol_list[start_idx + i2 : start_idx + i3], 3, year_arg, period_arg, shared_list),
     )
     p4 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i3 : start_idx + length_list], 4, year_arg, period_arg, q),
+        args=(symbol_list[start_idx + i3 : start_idx + length_list], 4, year_arg, period_arg, shared_list),
     )
 
     p1.start()
@@ -167,10 +170,9 @@ if __name__ == "__main__":
     p4.join()
 
     # Combine the result from all the multiprocesses
-    results = [q.get() for _ in range(q.qsize())]
     scraping_results = []
     failed_results = []
-    for data in results:
+    for data in shared_list:
         scraping_results.extend(data[0])
         failed_results.extend(data[1])
 
@@ -194,36 +196,38 @@ if __name__ == "__main__":
     print(f"The scraping execution time: {scraping_duration_str}")
     logging.info(f"Scraping execution has finished taking duration of {scraping_duration_str}.")
 
+
+
     # # DOWNLOAD AND EXCEL PROCESS
     # ##############################
 
     # Use multiprocess to increase efficiency
-    all_data = pd.DataFrame(scraping_results)
+    all_data = pd.read_csv(os.path.join("data", "url_list.csv"))
     length_list = len(all_data)
     i1 = int(length_list / 4)
     i2 = 2 * i1
     i3 = 3 * i1
 
-    # Using multiprocessing queue
-    q = Queue()
+    # Using multiprocessing sharedlist
+    shared_list = manager.list()
 
     # Process Program
     # [LOOK] idx_process.py
     p1 = Process(
         target=process_dataframe,
-        args=(all_data[:i1], period_arg, year_arg, q, 1),
+        args=(all_data[:i1], period_arg, year_arg, shared_list, 1),
     )
     p2 = Process(
         target=process_dataframe,
-        args=(all_data[i1:i2], period_arg, year_arg, q, 2),
+        args=(all_data[i1:i2], period_arg, year_arg, shared_list, 2),
     )
     p3 = Process(
         target=process_dataframe,
-        args=(all_data[i2:i3], period_arg, year_arg, q, 3),
+        args=(all_data[i2:i3], period_arg, year_arg, shared_list, 3),
     )
     p4 = Process(
         target=process_dataframe,
-        args=(all_data[i3:], period_arg, year_arg, q, 4),
+        args=(all_data[i3:], period_arg, year_arg, shared_list, 4),
     )
 
     p1.start()
@@ -237,10 +241,10 @@ if __name__ == "__main__":
     p4.join()
 
     # Combine the result from all the multiprocesses
-    results = [q.get() for _ in range(q.qsize())]
+    results = []
     quarter_results = []
     annual_results = []
-    for data in results:
+    for data in shared_list:
         quarter_results.extend(data[0])
         annual_results.extend(data[1])
 

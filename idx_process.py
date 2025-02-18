@@ -938,7 +938,7 @@ def process_dataframe(
     df: pd.DataFrame,
     period_arg: str,
     year_arg: int,
-    q : Queue,
+    shared_list: list,
     process: int = 1,
 ):
     scrapped_symbol_list = df["symbol"].unique()
@@ -1067,4 +1067,4 @@ def process_dataframe(
         start_idx += range_idx
 
     # Put to queue
-    q.put((result_data_list_quarter, result_data_list_annual))
+    shared_list.append((result_data_list_quarter, result_data_list_annual))
