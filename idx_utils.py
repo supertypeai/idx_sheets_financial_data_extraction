@@ -5,6 +5,7 @@ from supabase import create_client
 
 load_dotenv()
 
+DATA_IDX_SHEETS_DIR = os.path.join(os.getcwd(), "data_idx_sheets")
 DATA_DIR = os.path.join(os.getcwd(), "data")
 BASE_URL = "https://www.idx.co.id"
 PERIOD_LIST = ["tw1", "tw2", "tw3", "audit"]

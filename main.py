@@ -114,7 +114,7 @@ if __name__ == "__main__":
         .execute()
     )
     df_db_data = pd.DataFrame(db_data.data)
-    symbol_list: list = df_db_data["symbol"].unique().tolist()[:8]
+    symbol_list: list = df_db_data["symbol"].unique().tolist()
     print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
     start_idx = 0
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # Start time
     start = time.time()
 
-    # Using queue
+    # Using multiprocessing queue
     q = Queue()
 
     # Scraper Program
@@ -197,50 +197,74 @@ if __name__ == "__main__":
     # # DOWNLOAD AND EXCEL PROCESS
     # ##############################
 
-    # # Combine scrapped data
-    # all_data = combine_url_data(year_arg, period_arg)
+    # Use multiprocess to increase efficiency
+    all_data = pd.DataFrame(scraping_results)
+    length_list = len(all_data)
+    i1 = int(length_list / 4)
+    i2 = 2 * i1
+    i3 = 3 * i1
 
-    # # Use multiprocess to increase efficiency
-    # length_list = len(all_data)
-    # i1 = int(length_list / 4)
-    # i2 = 2 * i1
-    # i3 = 3 * i1
+    # Using multiprocessing queue
+    q = Queue()
 
-    # # Process Program
-    # # [LOOK] idx_process.py
-    # p1 = Process(
-    #     target=process_dataframe,
-    #     args=(all_data[:i1], period_arg, year_arg, 1),
-    # )
-    # p2 = Process(
-    #     target=process_dataframe,
-    #     args=(all_data[i1:i2], period_arg, year_arg, 2),
-    # )
-    # p3 = Process(
-    #     target=process_dataframe,
-    #     args=(all_data[i2:i3], period_arg, year_arg, 3),
-    # )
-    # p4 = Process(
-    #     target=process_dataframe,
-    #     args=(all_data[i3:], period_arg, year_arg, 4),
-    # )
+    # Process Program
+    # [LOOK] idx_process.py
+    p1 = Process(
+        target=process_dataframe,
+        args=(all_data[:i1], period_arg, year_arg, q, 1),
+    )
+    p2 = Process(
+        target=process_dataframe,
+        args=(all_data[i1:i2], period_arg, year_arg, q, 2),
+    )
+    p3 = Process(
+        target=process_dataframe,
+        args=(all_data[i2:i3], period_arg, year_arg, q, 3),
+    )
+    p4 = Process(
+        target=process_dataframe,
+        args=(all_data[i3:], period_arg, year_arg, q, 4),
+    )
 
-    # p1.start()
-    # p2.start()
-    # p3.start()
-    # p4.start()
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
 
-    # p1.join()
-    # p2.join()
-    # p3.join()
-    # p4.join()
+    p1.join()
+    p2.join()
+    p3.join()
+    p4.join()
 
-    # # End time
-    # end_processing = time.time()
-    # processing_duration = int(end_processing - end_scraping)
-    # processing_duration_str = time.strftime('%H:%M:%S', time.gmtime(processing_duration))
-    # print(f"The processing execution time: {processing_duration_str}")
-    # logging.info(f"Processing execution has finished taking duration of {processing_duration_str}.")
+    # Combine the result from all the multiprocesses
+    results = [q.get() for _ in range(q.qsize())]
+    quarter_results = []
+    annual_results = []
+    for data in results:
+        quarter_results.extend(data[0])
+        annual_results.extend(data[1])
 
-    # # Combine processed data
-    # data = combine_processed_data(year_arg, period_arg)
+    # Save quarter data
+    if len(quarter_results) != 0:
+        dataframe_quarter = pd.DataFrame(quarter_results)
+        filename_store_quarter = os.path.join(
+            DATA_DIR, f"data_quarter.csv"
+        )
+        dataframe_quarter.to_csv(filename_store_quarter, index=False)
+        print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
+    # Save annual data
+    if len(annual_results) != 0:
+        dataframe_annual = pd.DataFrame(annual_results)
+        filename_store_annual = os.path.join(
+            DATA_DIR, f"data_annual.csv"
+        )
+        dataframe_annual.to_csv(filename_store_annual, index=False)
+        print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
+
+    # End time
+    end_processing = time.time()
+    processing_duration = int(end_processing - end_scraping)
+    processing_duration_str = time.strftime('%H:%M:%S', time.gmtime(processing_duration))
+    print(f"The processing execution time: {processing_duration_str}")
+    logging.info(f"Processing execution has finished taking duration of {processing_duration_str}.")
+

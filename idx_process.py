@@ -5,7 +5,7 @@ import time
 import urllib
 from idx_mapping_constant import ROUNDING_LEVEL_MAPPING, UNIVERSAL_MAPPING
 from idx_utils import (
-    DATA_DIR,
+    DATA_IDX_SHEETS_DIR,
     BASE_URL,
     create_headers,
 )
@@ -15,6 +15,8 @@ import openpyxl as xl
 from dotenv import load_dotenv
 import requests
 import json
+from multiprocessing import Queue
+
 
 load_dotenv()
 
@@ -936,6 +938,7 @@ def process_dataframe(
     df: pd.DataFrame,
     period_arg: str,
     year_arg: int,
+    q : Queue,
     process: int = 1,
 ):
     scrapped_symbol_list = df["symbol"].unique()
@@ -1063,22 +1066,5 @@ def process_dataframe(
         # Incremental
         start_idx += range_idx
 
-    # MARK
-    # Save quarter data
-    if len(result_data_list_quarter) != 0:
-        dataframe_quarter = pd.DataFrame(result_data_list_quarter)
-        filename_store_quarter = os.path.join(
-            DATA_PROCESSED_DIR, f"data_quarter_P{process}.csv"
-        )
-        dataframe_quarter.to_csv(filename_store_quarter, index=False)
-        print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
-
-    # MARK
-    # Save annual data
-    if len(result_data_list_annual) != 0:
-        dataframe_annual = pd.DataFrame(result_data_list_annual)
-        filename_store_annual = os.path.join(
-            DATA_PROCESSED_DIR, f"data_annual_P{process}.csv"
-        )
-        dataframe_annual.to_csv(filename_store_annual, index=False)
-        print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
+    # Put to queue
+    q.put((result_data_list_quarter, result_data_list_annual))
