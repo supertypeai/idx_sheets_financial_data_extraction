@@ -7,6 +7,8 @@ from idx_scrape_url import fetch_url, get_data
 import sys
 from idx_utils import PERIOD_LIST, DATA_IDX_URL_DIR, DATA_PROCESSED_DIR, DATA_RESULT_DIR, supabase_client
 from datetime import datetime, timedelta
+import logging
+from imp import reload
 
 '''
 HOW TO START:
@@ -57,6 +59,12 @@ PREVIOUS_PERIOD_DATA => data of previous period for quarterly data
 
 '''
 
+def initiate_logging(LOG_FILENAME):
+    reload(logging)
+
+    formatLOG = '%(asctime)s - %(levelname)s: %(message)s'
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.INFO, format=formatLOG)
+
 # Combine scrapped data from the csv files
 def combine_url_data(year: str, period: str):
   failed_file_path = [os.path.join(DATA_IDX_URL_DIR,f'failed_list_P{i}.csv') for i in range(1,5)]
@@ -90,6 +98,7 @@ def combine_url_data(year: str, period: str):
     except Exception as e:
       print(f"[FAILED] There is no failed data: {file_path}")
   failed_data.to_csv(os.path.join(DATA_RESULT_DIR, f"data_failed_{year}_{period}.csv"), index=False)
+  logging.info(f"Failed data hase been stored. Amount: {len(failed_data)}. Value : {failed_data['symbol'].tolist()}.")
 
   return all_data
 
@@ -175,6 +184,10 @@ if __name__ == "__main__":
       year_arg = int(current_time.year)
 
 
+  LOG_FILENAME = 'scrapper.log'
+  initiate_logging(LOG_FILENAME)
+  logging.info(f"The program has started to extract quarter {period_arg} and year {year_arg} data")
+
   ## SCRAPE URL PROCESS
   ######################
     
@@ -223,7 +236,9 @@ if __name__ == "__main__":
   # End time
   end_scraping = time.time()
   scraping_duration = int(end_scraping-start)
-  print(f"The scraping execution time: {time.strftime('%H:%M:%S', time.gmtime(scraping_duration))}")
+  scraping_duration_str = time.strftime('%H:%M:%S', time.gmtime(scraping_duration))
+  print(f"The scraping execution time: {scraping_duration_str}")
+  logging.info(f"Scraping execution has finished taking duration of {scraping_duration_str}.")
 
 
 
@@ -259,7 +274,9 @@ if __name__ == "__main__":
   # End time
   end_processing = time.time()
   processing_duration = int(end_processing-end_scraping)
-  print(f"The processing execution time: {time.strftime('%H:%M:%S', time.gmtime(processing_duration))}")
+  processing_duration_str = time.strftime('%H:%M:%S', time.gmtime(processing_duration))
+  print(f"The processing execution time: {processing_duration_str}")
+  logging.info(f"Processing execution has finished taking duration of {processing_duration_str}.")
 
   # Combine processed data
   data = combine_processed_data(year_arg, period_arg)

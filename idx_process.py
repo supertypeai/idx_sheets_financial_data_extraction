@@ -606,7 +606,7 @@ def process_dataframe(df: pd.DataFrame, period_arg: str, year_arg: int, previous
 
 
 
-            # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
+      # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
         except Exception as e:
           print(f"[FAILED] Failed to open and process {filename} : {e}")
 
