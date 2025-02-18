@@ -9,6 +9,7 @@ from idx_utils import (
     BASE_URL,
     create_headers,
     supabase_client,
+    date_format
 )
 import warnings
 import urllib.request
@@ -123,12 +124,6 @@ def sum_value_range(
 
     return result_val
 
-
-# Change period and year to date format
-def date_format(period: str, year: str):
-    # period value = ['tw1', 'tw2', 'tw3', 'tw4']
-    period_map = {"tw1": "-03-31", "tw2": "-06-30", "tw3": "-09-30", "tw4": "-12-31"}
-    return f"{str(year)}{period_map[period]}"
 
 
 def load_data_dict(
@@ -1041,11 +1036,15 @@ def process_dataframe(
                       while(recurring_period_arg in prev_period_arg_mapping):
                         prev_period_arg = prev_period_arg_mapping[recurring_period_arg]
                         prev_period_date = date_format(prev_period_arg, year_arg)
-                        prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarter").select("income_stmt_metrics").eq("date", prev_period_date).execute())
+                        prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarter").select("income_stmt_metrics").eq("date", prev_period_date).execute()).data
 
-                        for key, value in quarter_data["income_stmt_metrics"].items():
-                            prev_val = prev_income_statement_data[key]
-                            quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+                        # Subtract if the data exist
+                        if( len(prev_income_statement_data) > 0):
+                          for key, value in quarter_data["income_stmt_metrics"].items():
+                              prev_val = prev_income_statement_data[key]
+                              quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+                        else:
+                            print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
 
                         recurring_period_arg = prev_period_arg
 

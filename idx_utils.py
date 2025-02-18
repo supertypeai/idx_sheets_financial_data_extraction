@@ -44,3 +44,9 @@ def create_headers():
 _SUPABASE_URL = os.getenv("SUPABASE_URL")
 _SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase_client = create_client(_SUPABASE_URL, _SUPABASE_KEY)
+
+# Change period and year to date format
+def date_format(period: str, year: str):
+    # period value = ['tw1', 'tw2', 'tw3', 'tw4']
+    period_map = {"tw1": "-03-31", "tw2": "-06-30", "tw3": "-09-30", "tw4": "-12-31"}
+    return f"{str(year)}{period_map[period]}"

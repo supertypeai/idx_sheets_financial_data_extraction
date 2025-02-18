@@ -9,6 +9,7 @@ from idx_utils import (
     PERIOD_LIST,
     DATA_DIR,
     supabase_client,
+    date_format
 )
 from datetime import datetime, timedelta
 import logging
@@ -113,6 +114,11 @@ if __name__ == "__main__":
         .lt("listing_date", current_year_end)
         .execute()
     )
+    # db_data = (
+    #     supabase_client.table("idx_active_company_profile")
+    #     .select("symbol")
+    #     .execute()
+    # )
     df_db_data = pd.DataFrame(db_data.data)
     symbol_list: list = df_db_data["symbol"].unique().tolist()
     print(f"[DATABASE] Get {len(symbol_list)} data from database")
@@ -129,6 +135,14 @@ if __name__ == "__main__":
 
     print(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
     logging.info(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
+
+    # # Implement selection only for data that does not exist in DB
+    # period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
+    # already_in_db_data = (supabase_client.table("idx_financial_sheets_annual").select("symbol").eq("date", period_date).execute()).data
+    # already_in_db_list = [data['symbol'] for data in already_in_db_data]
+    # for symbol in already_in_db_list:
+    #     if (symbol in symbol_list):
+            
 
     # Start time
     start = time.time()
