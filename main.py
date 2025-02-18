@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     LOG_FILENAME = 'process.log'
     initiate_logging(LOG_FILENAME)
-    logging.info(f"The program has started to extract quarter {period_arg} and year {year_arg} data")
+    logging.info(f"[INITIATE] The program has started to extract quarter {period_arg} and year {year_arg} data")
 
     ## SCRAPE URL PROCESS
     ######################
@@ -123,12 +123,12 @@ if __name__ == "__main__":
         # ignore if it is all
         length_list = length_list // 4
         start_idx += (int(batch_arg) - 1) * length_list
-        print(
-            f"[BATCH PROCESS] Finding batch process for company index {start_idx} to {start_idx+length_list}"
-        )
     i1 = length_list // 4
     i2 = 2 * i1
     i3 = 3 * i1
+
+    print(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
+    logging.info(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
 
     # Start time
     start = time.time()
@@ -194,7 +194,8 @@ if __name__ == "__main__":
     scraping_duration = int(end_scraping - start)
     scraping_duration_str = time.strftime('%H:%M:%S', time.gmtime(scraping_duration))
     print(f"The scraping execution time: {scraping_duration_str}")
-    logging.info(f"Scraping execution has finished taking duration of {scraping_duration_str}.")
+    logging.info(f"[PROGRESS] Scraping execution has finished taking duration of {scraping_duration_str}.")
+    logging.info(f"[FAILED REPORT] {len(failed_results)} data are failed to be scrapped.")
 
 
 
@@ -270,5 +271,5 @@ if __name__ == "__main__":
     processing_duration = int(end_processing - end_scraping)
     processing_duration_str = time.strftime('%H:%M:%S', time.gmtime(processing_duration))
     print(f"The processing execution time: {processing_duration_str}")
-    logging.info(f"Processing execution has finished taking duration of {processing_duration_str}.")
+    logging.info(f"[PROGRESS] Processing execution has finished taking duration of {processing_duration_str}.")
 

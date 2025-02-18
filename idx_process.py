@@ -8,6 +8,7 @@ from idx_utils import (
     DATA_IDX_SHEETS_DIR,
     BASE_URL,
     create_headers,
+    supabase_client,
 )
 import warnings
 import urllib.request
@@ -1026,25 +1027,30 @@ def process_dataframe(
                     # current_period_in_date = date_format(current_period, year_arg)
 
                     # Process the difference for income statement data
+                    if (period_arg != "tw1"):
+                      prev_period_arg_mapping = {
+                          "audit": "tw3",
+                          "tw3": "tw2",
+                          "tw2" : "tw1"
+                      }
 
-                    # if previous_period_data is not None:
-                    #     try:
-                    #         previous_income_statement_entry = previous_period_data.loc[row["symbol"], "income_stmt_metrics"]
-                    #         previous_income_statement_data = json.loads(previous_income_statement_entry)
-                    #         income_statement_data = dict()
+                      recurring_period_arg = period_arg
+                      # Doing recurrent since a quarter Q needs to be subtracted with all the previous quarter in the same year
+                      # For example: value for Q4 is <Q4_in_sheets> - Q3 - Q2 - Q1
+                      # value for Q3 is <Q3_in_sheets> - Q2 - Q1
+                      while(recurring_period_arg in prev_period_arg_mapping):
+                        prev_period_arg = prev_period_arg_mapping[recurring_period_arg]
+                        prev_period_date = date_format(prev_period_arg, year_arg)
+                        prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarter").select("income_stmt_metrics").eq("date", prev_period_date).execute())
 
-                    #         for key, value in quarter_data["income_stmt_metrics"].items():
-                    #             new_val = previous_income_statement_data.get(key, None)
-                    #             income_statement_data[key] = none_handling_operation(
-                    #                 value, new_val, "-", False
-                    #             )
+                        for key, value in quarter_data["income_stmt_metrics"].items():
+                            prev_val = prev_income_statement_data[key]
+                            quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
 
-                    #         quarter_data["income_stmt_metrics_actual"] = json.dumps(
-                    #             income_statement_data
-                    #         )
-                    #     except:
-                    #         print(f"[Q P{process}] Unable to get previous quarter data")
+                        recurring_period_arg = prev_period_arg
 
+
+                    # Dumps data to jsonb
                     quarter_data["balance_sheet_metrics"] = json.dumps(
                         quarter_data["balance_sheet_metrics"]
                     )
