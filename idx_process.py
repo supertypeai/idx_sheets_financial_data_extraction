@@ -1018,8 +1018,11 @@ def process_dataframe(
 
                     # Further handling for quarter data
                     quarter_data = data.copy()
-                    # current_period = "tw4" if period_arg == "audit" else period_arg
-                    # current_period_in_date = date_format(current_period, year_arg)
+
+                    # Save cumulative value as it is
+                    quarter_data['income_stmt_metrics_cumulative'] = json.dumps(
+                        quarter_data["income_stmt_metrics"]
+                    )
 
                     # Process the difference for income statement data
                     if (period_arg != "tw1"):
@@ -1029,24 +1032,20 @@ def process_dataframe(
                           "tw2" : "tw1"
                       }
 
-                      recurring_period_arg = period_arg
                       # Doing recurrent since a quarter Q needs to be subtracted with all the previous quarter in the same year
                       # For example: value for Q4 is <Q4_in_sheets> - Q3 - Q2 - Q1
                       # value for Q3 is <Q3_in_sheets> - Q2 - Q1
-                      while(recurring_period_arg in prev_period_arg_mapping):
-                        prev_period_arg = prev_period_arg_mapping[recurring_period_arg]
-                        prev_period_date = date_format(prev_period_arg, year_arg)
-                        prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarter").select("income_stmt_metrics").eq("date", prev_period_date).execute()).data
+                      prev_period_arg = prev_period_arg_mapping[period_arg]
+                      prev_period_date = date_format(prev_period_arg, year_arg)
+                      prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarter").select("income_stmt_metrics_cumulative").eq("date", prev_period_date).execute()).data
 
-                        # Subtract if the data exist
-                        if( len(prev_income_statement_data) > 0):
-                          for key, value in quarter_data["income_stmt_metrics"].items():
-                              prev_val = prev_income_statement_data[key]
-                              quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
-                        else:
-                            print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
-
-                        recurring_period_arg = prev_period_arg
+                      # Subtract if the data exist
+                      if( len(prev_income_statement_data) > 0):
+                        for key, value in quarter_data["income_stmt_metrics"].items():
+                            prev_val = prev_income_statement_data[key]
+                            quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+                      else:
+                          print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
 
 
                     # Dumps data to jsonb
