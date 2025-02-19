@@ -1036,8 +1036,9 @@ def process_dataframe(
                       if( len(prev_income_statement_data) > 0):
                         for key, value in quarter_data["income_stmt_metrics"].items():
                             if (key != "diluted_shares_outstanding"): # Exception 
-                              prev_val = prev_income_statement_data[key]
-                              quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+                              if (key in prev_income_statement_data):
+                                prev_val = prev_income_statement_data[key]
+                                quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
 
                         # Special cases for diluted_shares_outstanding
                         quarter_data['income_stmt_metrics']['diluted_shares_outstanding'] = none_handling_operation(
