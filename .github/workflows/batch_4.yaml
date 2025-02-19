@@ -3,7 +3,7 @@ name: Batch 4 Process
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 29 3,5,8,11 *' # “At 00:00 on day-of-month 29 in March, May, August, and November.”
+    - cron: '0 0 10,17,24,31 3,5,8,11 *' # “At 00:00 on day-of-month 10,17,24,31 in March, May, August, and November.”
 
 jobs:
   build:

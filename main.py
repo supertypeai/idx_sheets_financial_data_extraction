@@ -107,42 +107,52 @@ if __name__ == "__main__":
     ######################
 
     # Get the table
-    current_year_end = datetime(year_arg + 1, 1, 1).isoformat()
-    db_data = (
-        supabase_client.table("idx_active_company_profile")
-        .select("symbol")
-        .lt("listing_date", current_year_end)
-        .execute()
-    )
+    # current_year_end = datetime(year_arg + 1, 1, 1).isoformat()
     # db_data = (
     #     supabase_client.table("idx_active_company_profile")
     #     .select("symbol")
+    #     .lt("listing_date", current_year_end)
     #     .execute()
     # )
+    db_data = (
+        supabase_client.table("idx_active_company_profile")
+        .select("symbol")
+        .execute()
+    )
     df_db_data = pd.DataFrame(db_data.data)
     symbol_list: list = df_db_data["symbol"].unique().tolist()
     print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
+    # Handle for batches
     start_idx = 0
     length_list = len(symbol_list)
     if batch_arg != "all":
         # ignore if it is all
         length_list = length_list // 4
         start_idx += (int(batch_arg) - 1) * length_list
-    i1 = length_list // 4
-    i2 = 2 * i1
-    i3 = 3 * i1
+        symbol_list = symbol_list[start_idx : start_idx + length_list]
+
 
     print(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
     logging.info(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
 
-    # # Implement selection only for data that does not exist in DB
-    # period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
-    # already_in_db_data = (supabase_client.table("idx_financial_sheets_annual").select("symbol").eq("date", period_date).execute()).data
-    # already_in_db_list = [data['symbol'] for data in already_in_db_data]
-    # for symbol in already_in_db_list:
-    #     if (symbol in symbol_list):
-            
+    # Implement selection only for data that does not exist in DB
+    period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
+    already_in_db_data = (supabase_client.table("idx_financial_sheets_quarter").select("symbol").eq("date", period_date).execute()).data
+    already_in_db_list = [data['symbol'] for data in already_in_db_data]
+    for symbol in already_in_db_list:
+        if (symbol in symbol_list):
+            symbol_list.remove(symbol)
+
+    print(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")
+    logging.info(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")            
+
+    # Divide to 4 parts for multiprocess
+    length_list = len(symbol_list)
+    i1 = length_list // 4
+    i2 = 2 * i1
+    i3 = 3 * i1
+
 
     # Start time
     start = time.time()
@@ -157,19 +167,19 @@ if __name__ == "__main__":
     # [LOOK] idx_scrape_url.py
     p1 = Process(
         target=get_data,
-        args=(symbol_list[start_idx : start_idx + i1], 1, year_arg, period_arg, shared_list),
+        args=(symbol_list[:i1], 1, year_arg, period_arg, shared_list),
     )
     p2 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i1 : start_idx + i2], 2, year_arg, period_arg, shared_list),
+        args=(symbol_list[i1:i2], 2, year_arg, period_arg, shared_list),
     )
     p3 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i2 : start_idx + i3], 3, year_arg, period_arg, shared_list),
+        args=(symbol_list[i2:i3], 3, year_arg, period_arg, shared_list),
     )
     p4 = Process(
         target=get_data,
-        args=(symbol_list[start_idx + i3 : start_idx + length_list], 4, year_arg, period_arg, shared_list),
+        args=(symbol_list[i3:], 4, year_arg, period_arg, shared_list),
     )
 
     p1.start()

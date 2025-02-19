@@ -49,20 +49,20 @@ def fetch_url(
                 print(
                     f"[SUCCESS P{process}] Successfully get the data from company {symbol}, year {year}, period {period}"
                 )
-                return json_data
+                return json_data, None
             else:
                 print(
                     f"[FAILED P{process}] Data is not available for company {symbol}, year {year}, period {period}"
                 )
-                return None
+                return None, "Data is not available"
         else:
             print(
                 f"[FAILED P{process}] Failed to fetch from {url}. Get status code : {status_code}"
             )
-            return None
+            return None, f"Status: {status_code}"
     except Exception as e:
         print(f"[FAILED P{process}] Failed to fetch from {url} : {e}")
-        return None
+        return None, f"Failed fetch: {e}"
 
 
 def get_data(symbol_list: list, process: int, year: int, period: str, shared_list: list):
@@ -73,7 +73,7 @@ def get_data(symbol_list: list, process: int, year: int, period: str, shared_lis
     for symbol in symbol_list:
         adjusted_symbol = symbol.replace(".JK", "")
 
-        json_data = fetch_url(period, adjusted_symbol, year, process, False)
+        json_data, error_msg = fetch_url(period, adjusted_symbol, year, process, False)
         if json_data is not None:
             data_list = json_data["Results"][0]["Attachments"]
 
@@ -97,6 +97,7 @@ def get_data(symbol_list: list, process: int, year: int, period: str, shared_lis
                 "symbol": symbol,
                 "year": year,
                 "period": "tw4" if period == "audit" else period,
+                "error_message" : error_msg
             }
             FAILED_LIST.append(data_dict)
 
