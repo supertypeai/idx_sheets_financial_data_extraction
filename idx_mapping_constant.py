@@ -62,6 +62,8 @@ INCOME_STATEMENT_METRICS_BANK = [
     "income_taxes",
     "minorities",
     "net_income",
+    "profit_attributable_to_parent",
+    "basic_earnings_from_continuing_operations",
     "diluted_shares_outstanding",
 ]
 
@@ -79,6 +81,8 @@ INCOME_STATEMENT_METRICS_NON_BANK = [
     "interest_expense_non_operating",
     "ebit",
     "ebitda",
+    "profit_attributable_to_parent",
+    "basic_earnings_from_continuing_operations",
     "diluted_shares_outstanding",
 ]
 
@@ -133,6 +137,8 @@ GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Profit (loss) attributable to non-controlling interests": "minorities",
     "Profit (loss) attributable to parent entity": "net_income",
     "Interest and finance costs": "interest_expense_non_operating",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 GENERAL_CASH_FLOW_SHEET_CODE = ["1510000"]
 GENERAL_CASH_FLOW_COLUMN_MAPPING = {
@@ -175,6 +181,8 @@ PROPERTY_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Profit (loss) attributable to non-controlling interests": "minorities",
     "Total profit (loss)": "net_income",
     "Interest and finance costs": "interest_expense_non_operating",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 PROPERTY_CASH_FLOW_SHEET_CODE = ["2510000"]
 PROPERTY_CASH_FLOW_COLUMN_MAPPING = {
@@ -216,6 +224,8 @@ INFRASTRUCTURE_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Profit (loss) attributable to non-controlling interests": "minorities",
     "Profit (loss) attributable to parent entity": "net_income",
     "Interest and finance costs": "interest_expense_non_operating",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 INFRASTRUCTURE_CASH_FLOW_SHEET_CODE = ["3510000"]
 INFRASTRUCTURE_CASH_FLOW_COLUMN_MAPPING = {
@@ -253,6 +263,8 @@ FINANCE_SHARIA_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Total profit (loss) before tax": "pretax_income",
     "Tax benefit (expenses)": "income_taxes",
     "Profit (loss) attributable to non-controlling interests": "minorities",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 FINANCE_SHARIA_CASH_FLOW_SHEET_CODE = ["4510000"]
 FINANCE_SHARIA_CASH_FLOW_COLUMN_MAPPING = {
@@ -279,6 +291,8 @@ SECURITIES_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Tax benefit (expenses)": "income_taxes",
     "Total profit (loss)": "net_income",
     "Other expenses": "interest_expense_non_operating",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 SECURITIES_CASH_FLOW_SHEET_CODE = ["5510000"]
 SECURITIES_CASH_FLOW_COLUMN_MAPPING = {
@@ -307,6 +321,8 @@ INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Total profit (loss) before tax": "pretax_income",
     "Tax benefit (expenses)": "income_taxes",
     "Total profit (loss)": "net_income",
+    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
+    "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 INSURANCE_CASH_FLOW_SHEET_CODE = ["6510000"]
 INSURANCE_CASH_FLOW_COLUMN_MAPPING = {

@@ -428,12 +428,11 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             elif industry_key_idx == 2:  # Property
@@ -462,12 +461,11 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             elif industry_key_idx == 3:  # Infrastructure
@@ -496,12 +494,11 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             elif industry_key_idx == 4:  # Finance and Sharia
@@ -565,12 +562,11 @@ def process_income_statement(
                     "+",
                     True,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             elif industry_key_idx == 5:  # Securities
@@ -593,22 +589,20 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             elif industry_key_idx == 6:  # Insurance
                 "TODO: waiting unfinalized metrics"
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             else:  # (industry_key_idx == 8): # Financing
@@ -640,12 +634,11 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = sum_value_equal(
-                    df, ["Profit (loss) attributable to parent entity"], rounding_val
-                ) / sum_value_equal(
-                    df,
-                    ["Basic earnings (loss) per share from continuing operations"],
-                    rounding_val,
+                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
+                    income_statement_dict["profit_attributable_to_parent"],
+                    income_statement_dict["basic_earnings_from_continuing_operations"],
+                    "/",
+                    False,
                 )
 
             return income_statement_dict
@@ -1042,8 +1035,17 @@ def process_dataframe(
                       # Subtract if the data exist
                       if( len(prev_income_statement_data) > 0):
                         for key, value in quarter_data["income_stmt_metrics"].items():
-                            prev_val = prev_income_statement_data[key]
-                            quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+                            if (key != "diluted_shares_outstanding"): # Exception 
+                              prev_val = prev_income_statement_data[key]
+                              quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
+
+                        # Special cases for diluted_shares_outstanding
+                        quarter_data['income_stmt_metrics']['diluted_shares_outstanding'] = none_handling_operation(
+                                    quarter_data['income_stmt_metrics']["profit_attributable_to_parent"],
+                                    quarter_data['income_stmt_metrics']["basic_earnings_from_continuing_operations"],
+                                    "/",
+                                    False,
+                                )
                       else:
                         quarter_data['income_stmt_metrics'] = None
                         print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
