@@ -89,10 +89,17 @@ if __name__ == "__main__":
         current_time = datetime.now()
         current_month = int(current_time.month)
         batch_arg = sys.argv[1]
-        if current_month == 3:  # Get Annual and Q4 last year
+        if current_month <= 3:  # Get Annual and Q4 last year 
+            # Should only be run when current_month == 3
+            # But can also run when current_month == 1 and current_month == 2
             period_arg = "audit"
             year_arg = int(current_time.year) - 1
-        elif current_month in [5, 8, 11]:  # 5, 8, 11 # Get Q1, Q2, Q3 this year
+        elif current_month in [5, 8, 11]:  # Get Q1, Q2, Q3 this year
+            # Should only run when current_month == [5,8,11] 
+            # But can also run for the rest
+            # Current_month 4,5,6 => Getting Q1
+            # Current_month 7,8,9 => Getting Q2
+            # Current_month 10,11,12 => Getting Q3
             last_quarter = current_time - timedelta(30)
             month = int(last_quarter.month)
             month_arg_idx = max((month - 1) // 3, 0)

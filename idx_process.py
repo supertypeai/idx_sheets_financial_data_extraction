@@ -178,7 +178,6 @@ def process_balance_sheet(
             # Iterate for data that can be directly selected
             for _, row in df.iterrows():
                 if row["Unnamed: 3"] in column_mapping:
-                    # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
                     data_val = (
                         None
                         if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
@@ -304,13 +303,18 @@ def process_balance_sheet(
                     "-",
                     False,
                 )
-                balance_sheet_dict["total_cash_and_due_from_banks"] = sum_value_equal(
+                balance_sheet_dict["total_cash_and_due_from_banks"] = none_handling_operation(
+                    sum_value_equal(
                     df, ["Cash", "Current accounts with bank Indonesia"], rounding_val
-                ) + sum_value_range(
+                  ),
+                  sum_value_range(
                     df,
                     "Current accounts with other banks",
                     "Allowance for impairment losses for current accounts with other bank",
                     rounding_val,
+                  ), 
+                  "+",
+                  True
                 )
                 balance_sheet_dict["current_account"] = sum_value_range(
                     df,
@@ -383,7 +387,6 @@ def process_income_statement(
         if df is not None:
             for _, row in df.iterrows():
                 if row["Unnamed: 3"] in column_mapping:
-                    # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
                     data_val = (
                         None
                         if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
@@ -737,7 +740,6 @@ def process_cash_flow(
         if df is not None:
             for _, row in df.iterrows():
                 if row["Unnamed: 3"] in column_mapping:
-                    # print(f"[FOUND] : {row['Unnamed: 3']}!!") # For Testing
                     data_val = (
                         None
                         if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
@@ -1020,9 +1022,7 @@ def process_dataframe(
                     quarter_data = data.copy()
 
                     # Save cumulative value as it is
-                    quarter_data['income_stmt_metrics_cumulative'] = json.dumps(
-                        quarter_data["income_stmt_metrics"]
-                    )
+                    quarter_data['income_stmt_metrics_cumulative'] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None
 
                     # Process the difference for income statement data
                     if (period_arg != "tw1"):
@@ -1045,28 +1045,21 @@ def process_dataframe(
                             prev_val = prev_income_statement_data[key]
                             quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
                       else:
-                          print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
+                        quarter_data['income_stmt_metrics'] = None
+                        print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
 
 
                     # Dumps data to jsonb
-                    quarter_data["balance_sheet_metrics"] = json.dumps(
-                        quarter_data["balance_sheet_metrics"]
-                    )
-                    quarter_data["income_stmt_metrics"] = json.dumps(
-                        quarter_data["income_stmt_metrics"]
-                    )
-                    quarter_data["cash_flow_metrics"] = json.dumps(
-                        quarter_data["cash_flow_metrics"]
-                    )
+                    quarter_data["balance_sheet_metrics"] = json.dumps(quarter_data["balance_sheet_metrics"]) if (quarter_data['balance_sheet_metrics'] is not None) else None
+                    quarter_data["income_stmt_metrics"] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None 
+                    quarter_data["cash_flow_metrics"] = json.dumps(quarter_data["cash_flow_metrics"]) if (quarter_data['cash_flow_metrics'] is not None) else None
 
                     # Insert all the data in current_symbol_list_data to result_data_list
                     result_data_list_quarter.append(quarter_data)
 
-                    # Files that are failed to be processed will not be deleted (in order to make it easier to notice)
                 except Exception as e:
                     print(f"[FAILED] Failed to open and process {filename} : {e}")
 
-        # break # for testing
         # Incremental
         start_idx += range_idx
 
