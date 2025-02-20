@@ -998,10 +998,11 @@ def process_dataframe(
                       # value for Q3 is <Q3_in_sheets> - Q2 - Q1
                       prev_period_arg = prev_period_arg_mapping[period_arg]
                       prev_period_date = date_format(prev_period_arg, year_arg)
-                      prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarterly").select("income_stmt_metrics_cumulative").eq("date", prev_period_date).execute()).data
+                      prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarterly").select("income_stmt_metrics_cumulative").eq("date", prev_period_date).eq("symbol", symbol).execute()).data
 
                       # Subtract if the data exist
                       if( len(prev_income_statement_data) > 0):
+                        prev_income_statement_data = prev_income_statement_data[0]["income_stmt_metrics_cumulative"]
                         for key, value in quarter_data["income_stmt_metrics"].items():
                             if (key != "diluted_shares_outstanding"): # Exception 
                               if (key in prev_income_statement_data):
