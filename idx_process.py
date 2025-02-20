@@ -273,6 +273,7 @@ def process_balance_sheet(
                     "-",
                     False,
                 )
+                balance_sheet_dict["total_earning_asset"] = None # TODO
                 balance_sheet_dict["total_cash_and_due_from_banks"] = none_handling_operation(
                     sum_value_equal(
                     df, ["Cash", "Current accounts with bank Indonesia"], rounding_val
@@ -309,17 +310,25 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
+                balance_sheet_dict['other_interest_bearing_liabilities'] = None # TODO
+                balance_sheet_dict['non_interest_bearing_liabilities'] = None # TODO
+                balance_sheet_dict['total_debt'] = None # TODO
+
 
             elif industry_key_idx == 5:  # Securities
                 balance_sheet_dict["cash_only"] = sum_value_equal(
                     df, ["Cash and cash equivalents", "Restricted funds"], rounding_val
                 )
+                balance_sheet_dict['cash_and_short_term_investments'] = None # TODO
+                balance_sheet_dict['total_debt'] = None # TODO
 
             elif industry_key_idx == 6:  # Insurance
                 "TODO: waiting unfinalized metrics"
+                balance_sheet_dict['total_cash_and_due_from_banks'] = None # TODO
 
             else:  # (industry_key_idx == 8): # Financing
                 "TODO: waiting unfinalized metrics"
+                balance_sheet_dict['total_debt'] = None # TODO
 
             return balance_sheet_dict
 
@@ -550,7 +559,7 @@ def process_income_statement(
                     rounding_val,
                 )
                 income_statement_dict["operating_income"] = None  # TODO
-                # income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False)
+                # income_statement_dict['non_operating_income_or_loss'] = none_handling_operation(income_statement_dict['pretax_income'], income_statement_dict['operating_income'], '-', False) # TODO
                 income_statement_dict["ebit"] = none_handling_operation(
                     income_statement_dict["pretax_income"],
                     income_statement_dict["interest_expense_non_operating"],
@@ -566,6 +575,10 @@ def process_income_statement(
 
             elif industry_key_idx == 6:  # Insurance
                 "TODO: waiting unfinalized metrics"
+                income_statement_dict['cost_of_revenue'] = None # TODO
+                income_statement_dict['operating_expense'] = None # TODO
+                income_statement_dict['non_interest_income'] = None # TODO
+
                 income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
                     income_statement_dict["profit_attributable_to_parent"],
                     income_statement_dict["basic_earnings_from_continuing_operations"],
@@ -596,6 +609,7 @@ def process_income_statement(
                     "+",
                     True,
                 )
+                income_statement_dict['interest_expense_non_operating'] = None # TODO
                 income_statement_dict["ebit"] = none_handling_operation(
                     income_statement_dict["pretax_income"],
                     income_statement_dict["interest_expense_non_operating"],
@@ -658,13 +672,7 @@ def process_additional_metrics(
                 "+",
             )
 
-        elif industry_key_idx == 4:  # Finance and Sharia
-            additional_metrics_dict["ebitda"] = None  # TODO
-
         elif industry_key_idx == 5:  # Securities
-            additional_metrics_dict["ebitda"] = None  # TODO
-
-        elif industry_key_idx == 6:  # Insurance
             additional_metrics_dict["ebitda"] = None  # TODO
 
         else:  # (industry_key_idx == 8): # Financing
@@ -729,11 +737,12 @@ def process_cash_flow(
                     False,
                 )
             else:  # (industry_key == 4)
-                cash_flow_dict["total_high_quality_liquid_asset"] = None  # TODO
+                cash_flow_dict["high_quality_liquid_asset"] = None  # TODO
                 cash_flow_dict["cash_outflow"] = None  # TODO
                 cash_flow_dict["cash_inflow"] = None  # TODO
                 cash_flow_dict["net_cash_flow"] = None  # TODO
                 cash_flow_dict["realized_capital_goods_investment"] = None  # TODO
+                cash_flow_dict['free_cash_flow'] = None # TODO
 
             return cash_flow_dict
 
@@ -923,7 +932,6 @@ def process_dataframe(
         for symbol in scrapped_symbol_list[start_idx : start_idx + range_idx]:
             curr_symbol_df = df[df["symbol"] == symbol]
 
-            # MARK
             # Download excel file
             for _, row in curr_symbol_df.iterrows():
                 # File name to be saved
@@ -975,9 +983,9 @@ def process_dataframe(
                             f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
                         )
 
-                    # MARK
-                    # Delete the excel file if the data has been processed
-                    os.remove(filename)
+                    # # MARK
+                    # # Delete the excel file if the data has been processed
+                    # os.remove(filename)
 
                     # Further handling for quarter data
                     quarter_data = data.copy()
