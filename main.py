@@ -172,35 +172,35 @@ if __name__ == "__main__":
     # Using multiprocessing sharedlist
     shared_list = manager.list()
 
-    # Scraper Program
-    # [LOOK] idx_scrape_url.py
-    p1 = Process(
-        target=get_data,
-        args=(symbol_list[:i1], 1, year_arg, period_arg, shared_list),
-    )
-    p2 = Process(
-        target=get_data,
-        args=(symbol_list[i1:i2], 2, year_arg, period_arg, shared_list),
-    )
-    p3 = Process(
-        target=get_data,
-        args=(symbol_list[i2:i3], 3, year_arg, period_arg, shared_list),
-    )
-    p4 = Process(
-        target=get_data,
-        args=(symbol_list[i3:], 4, year_arg, period_arg, shared_list),
-    )
+    # # Scraper Program
+    # # [LOOK] idx_scrape_url.py
+    # p1 = Process(
+    #     target=get_data,
+    #     args=(symbol_list[:i1], 1, year_arg, period_arg, shared_list),
+    # )
+    # p2 = Process(
+    #     target=get_data,
+    #     args=(symbol_list[i1:i2], 2, year_arg, period_arg, shared_list),
+    # )
+    # p3 = Process(
+    #     target=get_data,
+    #     args=(symbol_list[i2:i3], 3, year_arg, period_arg, shared_list),
+    # )
+    # p4 = Process(
+    #     target=get_data,
+    #     args=(symbol_list[i3:], 4, year_arg, period_arg, shared_list),
+    # )
 
-    p1.start()
-    p2.start()
-    time.sleep(1)
-    p3.start()
-    p4.start()
+    # p1.start()
+    # p2.start()
+    # time.sleep(1)
+    # p3.start()
+    # p4.start()
 
-    p1.join()
-    p2.join()
-    p3.join()
-    p4.join()
+    # p1.join()
+    # p2.join()
+    # p3.join()
+    # p4.join()
 
     # Combine the result from all the multiprocesses
     scraping_results = []

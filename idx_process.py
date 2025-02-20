@@ -767,19 +767,26 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
             req = urllib.request.Request(url, headers=create_headers())
 
             # Open the request and write the response to a file
-            with urllib.request.urlopen(req) as response, open(
-                filename, "wb"
-            ) as out_file:
+            response = urllib.request.urlopen(req)
+            out_file = open(filename, "wb")
+
+            if (int(response.getcode()) == 200):
                 data = response.read()  # Read the response data
                 out_file.write(data)  # Write the data to a file
+            else:
+                print(f"[FAILED] Failed to get data status code {response.getcode()}")
 
         else:
-            response = requests.get(url, proxies=PROXIES, verify=False)
+            response = requests.get(url, allow_redirects=True, proxies=PROXIES, verify=False)
+            
+            if (int(response.status_code) == 200):
+              # Write the response content to a file
+              with open(filename, "wb") as out_file:
+                  for chunk in response.iter_content(chunk_size=8192):
+                      out_file.write(chunk)
+            else:
+                print(f"[FAILED] Failed to get data status code {response.status_code}")
 
-            # Write the response content to a file
-            with open(filename, "wb") as out_file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    out_file.write(chunk)
         return True
     except Exception as e:
         print(f"[FAILED] Failed to download excel file: {e}")
@@ -946,7 +953,7 @@ def process_dataframe(
                 limit_attempts = 3
                 download_return = False
                 while attempt <= limit_attempts and not download_return:
-                    download_return = download_excel_file(url, filename, False)
+                    download_return = download_excel_file(url, filename, True)
                     attempt += 1
                     if not download_return:
                         if attempt > limit_attempts:

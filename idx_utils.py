@@ -84,3 +84,4 @@ def none_handling_operation(
                 return num1 / num2
             elif operation == "*":
                 return num1 * num2
+            
