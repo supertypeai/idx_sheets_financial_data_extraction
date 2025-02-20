@@ -9,7 +9,8 @@ from idx_utils import (
     BASE_URL,
     create_headers,
     supabase_client,
-    date_format
+    date_format,
+    none_handling_operation
 )
 import warnings
 import urllib.request
@@ -30,39 +31,6 @@ PROXIES = {
 
 warnings.simplefilter(action="ignore", category=UserWarning)
 
-
-# Make general function to be used in adding None
-# none_to_zero == True -> assuming None is equal to 0 -> None (operation) num = num
-# none_to_zero == False -> None (operation) num = None
-def none_handling_operation(
-    num1: float, num2: float, operation: str, none_to_zero: bool = False
-):
-    # Generalize None type
-    none_num1 = False
-    none_num2 = False
-    if num1 is None or np.isnan(num1):
-        none_num1 = True
-    if num2 is None or np.isnan(num2):
-        none_num2 = True
-
-    # Check and Calculate
-    if none_num1 and none_num2:
-        return None
-    else:
-        if none_num1:
-            return num2 if none_to_zero else None
-        elif none_num2:
-            return num1 if none_to_zero else None
-        else:
-            # Correct condition
-            if operation == "+":
-                return num1 + num2
-            elif operation == "-":
-                return num1 - num2
-            elif operation == "/":
-                return num1 / num2
-            elif operation == "*":
-                return num1 * num2
 
 
 # Used to get the data value where the column name is contained within the list
