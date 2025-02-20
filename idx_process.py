@@ -1007,14 +1007,6 @@ def process_dataframe(
                               if (key in prev_income_statement_data):
                                 prev_val = prev_income_statement_data[key]
                                 quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
-
-                        # Special cases for diluted_shares_outstanding
-                        quarter_data['income_stmt_metrics']['diluted_shares_outstanding'] = none_handling_operation(
-                                    quarter_data['income_stmt_metrics']["profit_attributable_to_parent"],
-                                    quarter_data['income_stmt_metrics']["basic_earnings_from_continuing_operations"],
-                                    "/",
-                                    False,
-                                )
                       else:
                         quarter_data['income_stmt_metrics'] = None
                         print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")

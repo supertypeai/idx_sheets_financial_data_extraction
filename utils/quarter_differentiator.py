@@ -59,14 +59,11 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
                       if (key in prev_income_stmt_cumulative):
                         prev_val = prev_income_stmt_cumulative[key]
                         current_quarter_data[key] = none_handling_operation(value, prev_val, "-", False)
+                    else:
+                      # diluted_shares_outstanding is not subtracted
+                      current_quarter_data[key] = value
 
-                # Special cases for diluted_shares_outstanding
-                current_quarter_data['diluted_shares_outstanding'] = none_handling_operation(
-                            current_quarter_data["profit_attributable_to_parent"],
-                            current_quarter_data["basic_earnings_from_continuing_operations"],
-                            "/",
-                            False,
-                        )
+
               else:
                 print(f"[NONE VALUE CURRENT] None value for current data Ticker {curr_q_row['symbol']}")
             else:
