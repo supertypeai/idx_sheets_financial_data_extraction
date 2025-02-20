@@ -73,10 +73,6 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
       
       curr_q_data.to_csv(result_path, index=False)
       
-      
-
-
-
 
 
 prev_q_path = os.path.join(DATA_DIR, "data_quarter_2022_tw1.csv")

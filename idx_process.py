@@ -81,11 +81,13 @@ def sum_value_range(
                     else float(row["Unnamed: 1"] * rounding_val)
                 )
                 result_val = none_handling_operation(result_val, data_val, "+", True)
+
+            if row["Unnamed: 3"] == column_end and not starting_point:
+                continue_process = False
+                break
+            
             starting_point = False
 
-        if row["Unnamed: 3"] == column_end and not starting_point:
-            continue_process = False
-            break
 
     if continue_process:
         print(f"[ERROR] Column end {column_end} is not found!")
@@ -382,14 +384,12 @@ def process_income_statement(
                     "+",
                     True,
                 )
-                income_statement_dict["non_operating_income_or_loss"] = (
-                    none_handling_operation(
+                income_statement_dict["non_operating_income_or_loss"] = none_handling_operation(
                         income_statement_dict["pretax_income"],
                         income_statement_dict["operating_income"],
                         "-",
                         False,
                     )
-                )
                 income_statement_dict["ebit"] = none_handling_operation(
                     income_statement_dict["pretax_income"],
                     income_statement_dict["interest_expense_non_operating"],
@@ -474,13 +474,13 @@ def process_income_statement(
                     income_statement_dict["interest_income"],
                     income_statement_dict["interest_expense"],
                     "+",
-                    False,
+                    True,
                 )
                 income_statement_dict["net_premium_income"] = none_handling_operation(
                     income_statement_dict["premium_income"],
                     income_statement_dict["premium_expense"],
                     "+",
-                    False,
+                    True,
                 )
                 income_statement_dict["non_interest_income"] = sum_value_range(
                     df, "Other operating income", "Other operating income", rounding_val
@@ -490,11 +490,11 @@ def process_income_statement(
                         income_statement_dict["net_interest_income"],
                         income_statement_dict["net_premium_income"],
                         "+",
-                        False,
+                        True,
                     ),
                     income_statement_dict["non_interest_income"],
                     "+",
-                    False,
+                    True,
                 )
                 income_statement_dict["operating_expense"] = sum_value_range(
                     df,
