@@ -15,7 +15,7 @@ BALANCE_SHEET_METRICS_BANK = [
     "net_loan",
     "non_loan_asset",
     "total_asset",
-    "total_earning_assets",
+    "total_earning_asset",
     "cash_only",
     "total_cash_and_due_from_banks",
     "current_account",

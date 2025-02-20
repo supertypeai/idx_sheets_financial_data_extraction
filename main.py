@@ -94,7 +94,7 @@ if __name__ == "__main__":
             # But can also run when current_month == 1 and current_month == 2
             period_arg = "audit"
             year_arg = int(current_time.year) - 1
-        elif current_month in [5, 8, 11]:  # Get Q1, Q2, Q3 this year
+        else:   # Get Q1, Q2, Q3 this year
             # Should only run when current_month == [5,8,11] 
             # But can also run for the rest
             # Current_month 4,5,6 => Getting Q1

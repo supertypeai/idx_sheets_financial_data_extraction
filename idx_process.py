@@ -297,7 +297,7 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
-                balance_sheet_dict["non_loan_assets"] = none_handling_operation(
+                balance_sheet_dict["non_loan_asset"] = none_handling_operation(
                     balance_sheet_dict["total_asset"],
                     balance_sheet_dict["net_loan"],
                     "-",
