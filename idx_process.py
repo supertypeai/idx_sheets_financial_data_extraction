@@ -41,7 +41,7 @@ def sum_value_equal(df: pd.DataFrame, column_list: list, rounding_val: float):
             data_val = (
                 None
                 if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
-                else float(row["Unnamed: 1"] * rounding_val)
+                else none_handling_operation(float(row["Unnamed: 1"]), float(rounding_val), "*", False)
             )
             result_val = none_handling_operation(result_val, data_val, "+", True)
 
@@ -78,7 +78,7 @@ def sum_value_range(
                 data_val = (
                     None
                     if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
-                    else float(row["Unnamed: 1"] * rounding_val)
+                    else none_handling_operation(float(row["Unnamed: 1"]), float(rounding_val), "*", False)
                 )
                 result_val = none_handling_operation(result_val, data_val, "+", True)
 
@@ -492,7 +492,7 @@ def process_income_statement(
                     True,
                 )
                 income_statement_dict["non_interest_income"] = sum_value_range(
-                    df, "Other operating income", "Other operating income", rounding_val
+                    df, "Investments income", "Other operating income", rounding_val
                 )
                 income_statement_dict["total_revenue"] = none_handling_operation(
                     none_handling_operation(
@@ -507,7 +507,7 @@ def process_income_statement(
                 )
                 income_statement_dict["operating_expense"] = sum_value_range(
                     df,
-                    "Other operating expenses",
+                    "General and administrative expenses",
                     "Other operating expenses",
                     rounding_val,
                 )
@@ -953,7 +953,7 @@ def process_dataframe(
                 limit_attempts = 3
                 download_return = False
                 while attempt <= limit_attempts and not download_return:
-                    download_return = download_excel_file(url, filename, True)
+                    download_return = download_excel_file(url, filename, False)
                     attempt += 1
                     if not download_return:
                         if attempt > limit_attempts:

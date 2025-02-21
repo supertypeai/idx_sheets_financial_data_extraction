@@ -60,7 +60,7 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
                 data = response.read()  # Read the response data
                 out_file.write(data)  # Write the data to a file
             else:
-                print(f"[FAILED] Failed to get data status code {response.getcode()}")
+                print(f"[FAILED] Failed to get data with Status code: {response.getcode()}")
 
         else:
             response = requests.get(url, allow_redirects=True, proxies=PROXIES, verify=False)
@@ -71,7 +71,7 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
                   for chunk in response.iter_content(chunk_size=8192):
                       out_file.write(chunk)
             else:
-                print(f"[FAILED] Failed to get data status code {response.status_code}")
+                print(f"[FAILED] Failed to get data with Status code: {response.status_code}")
 
         return True
     except Exception as e:
