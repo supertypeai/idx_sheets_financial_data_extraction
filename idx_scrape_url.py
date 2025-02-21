@@ -1,12 +1,10 @@
 from idx_utils import (
     BASE_URL,
-    PERIOD_LIST,
     create_headers,
 )
 import urllib.request
 import json
 import time
-import pandas as pd
 import os
 from dotenv import load_dotenv
 import requests
@@ -73,7 +71,22 @@ def get_data(symbol_list: list, process: int, year: int, period: str, shared_lis
     for symbol in symbol_list:
         adjusted_symbol = symbol.replace(".JK", "")
 
-        json_data, error_msg = fetch_url(period, adjusted_symbol, year, process, False)
+        attempt = 0
+        limit_attempts = 3
+        json_data = None
+        while json_data is None and attempt < limit_attempts:
+            json_data, error_msg = fetch_url(period, adjusted_symbol, year, process, False)
+            attempt += 1
+            if json_data is None:
+                if attempt >= limit_attempts:
+                    print(
+                        f"[COMPLETE FAILED] Failed to scrape URL for {symbol} after {limit_attempts} attempts: {error_msg}"
+                    )
+                else:
+                    print(
+                        f"[FAILED] Failed to scrape URL for {symbol} after {attempt} attempts. Retrying..."
+                    )
+
         if json_data is not None:
             data_list = json_data["Results"][0]["Attachments"]
 
