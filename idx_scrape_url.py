@@ -86,6 +86,8 @@ def get_data(symbol_list: list, process: int, year: int, period: str, shared_lis
                     print(
                         f"[FAILED] Failed to scrape URL for {symbol} after {attempt} attempts. Retrying..."
                     )
+            
+            time.sleep(1.5)
 
         if json_data is not None:
             data_list = json_data["Results"][0]["Attachments"]
