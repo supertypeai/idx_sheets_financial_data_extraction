@@ -939,6 +939,7 @@ def process_dataframe(
         for symbol in scrapped_symbol_list[start_idx : start_idx + range_idx]:
             curr_symbol_df = df[df["symbol"] == symbol]
 
+            # MARK
             # Download excel file
             for _, row in curr_symbol_df.iterrows():
                 # File name to be saved
