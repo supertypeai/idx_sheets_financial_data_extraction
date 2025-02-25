@@ -18,7 +18,6 @@ import openpyxl as xl
 from dotenv import load_dotenv
 import requests
 import json
-from multiprocessing import Queue
 
 
 load_dotenv()
@@ -85,7 +84,7 @@ def sum_value_range(
             if row["Unnamed: 3"] == column_end and not starting_point:
                 continue_process = False
                 break
-            
+
             starting_point = False
 
 
@@ -283,7 +282,7 @@ def process_balance_sheet(
                     "Current accounts with other banks",
                     "Allowance for impairment losses for current accounts with other bank",
                     rounding_val,
-                  ), 
+                  ),
                   "+",
                   True
                 )
@@ -778,7 +777,7 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
 
         else:
             response = requests.get(url, allow_redirects=True, proxies=PROXIES, verify=False)
-            
+
             if (int(response.status_code) == 200):
               # Write the response content to a file
               with open(filename, "wb") as out_file:
@@ -788,6 +787,9 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
                 print(f"[FAILED] Failed to get data status code {response.status_code}")
 
         return True
+    except urllib.request.HTTPError as httper:
+        print(f"[FAILED] Failed to download excel file: {httper}")
+        return httper.getcode() == 404
     except Exception as e:
         print(f"[FAILED] Failed to download excel file: {e}")
         return False
@@ -931,6 +933,7 @@ def process_dataframe(
     # Container for Data
     result_data_list_quarter = list()
     result_data_list_annual = list()
+    failed_list = list()
 
     while start_idx < symbol_data_length:
         range_idx = min(symbol_data_length - start_idx, range_limit)
@@ -1020,7 +1023,7 @@ def process_dataframe(
                       if( len(prev_income_statement_data) > 0):
                         prev_income_statement_data = prev_income_statement_data[0]["income_stmt_metrics_cumulative"]
                         for key, value in quarter_data["income_stmt_metrics"].items():
-                            if (key != "diluted_shares_outstanding"): # Exception 
+                            if (key != "diluted_shares_outstanding"): # Exception
                               if (key in prev_income_statement_data):
                                 prev_val = prev_income_statement_data[key]
                                 quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
@@ -1031,7 +1034,7 @@ def process_dataframe(
 
                     # Dumps data to jsonb
                     quarter_data["balance_sheet_metrics"] = json.dumps(quarter_data["balance_sheet_metrics"]) if (quarter_data['balance_sheet_metrics'] is not None) else None
-                    quarter_data["income_stmt_metrics"] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None 
+                    quarter_data["income_stmt_metrics"] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None
                     quarter_data["cash_flow_metrics"] = json.dumps(quarter_data["cash_flow_metrics"]) if (quarter_data['cash_flow_metrics'] is not None) else None
 
                     # Insert all the data in current_symbol_list_data to result_data_list
@@ -1039,9 +1042,16 @@ def process_dataframe(
 
                 except Exception as e:
                     print(f"[FAILED] Failed to open and process {filename} : {e}")
+                    failed_entry = {
+                            "symbol": symbol,
+                            "year": year_arg,
+                            "period": period_arg,
+                            "error_message": e
+                        }
+                    failed_list.append(failed_entry)
 
         # Incremental
         start_idx += range_idx
 
     # Put to queue
-    shared_list.append((result_data_list_quarter, result_data_list_annual))
+    shared_list.append((result_data_list_quarter, result_data_list_annual, failed_list))
