@@ -7,6 +7,15 @@ import json
 
 load_dotenv()
 
+def preprocess(data):
+    data_dict = json.loads(data)
+    
+    for k, v in data_dict.items():
+       if (v is not None):
+          data_dict[k] = int(v)
+
+    return data_dict
+
 if __name__ == "__main__":
   url_supabase = os.getenv("SUPABASE_URL")
   key = os.getenv("SUPABASE_KEY")
@@ -17,24 +26,29 @@ if __name__ == "__main__":
   df = df.replace({np.nan: None})
   data_dict = df.to_dict(orient="records")
 
-  supabase.table("idx_financials_sheets_quarterly").upsert(data_dict).execute()
+  # supabase.table("idx_financial_sheets_quarterly").upsert(data_dict).execute()
 
-  # # try:
-  # for record in data_dict:
-  #     # for k, v in record.items():
-  #     #    print(k, v)
+  for record in data_dict:
+      # for k, v in record.items():
+      #    print(k, v)
 
-  #     # print(record['income_stmt_metrics'], len(record['income_stmt_metrics']))
-  #     # record['balance_sheet_metrics'] = json.loads(record['balance_sheet_metrics'])
-  #     # record['income_stmt_metrics'] = json.loads(record['income_stmt_metrics'])
-  #     # record['cash_flow_metrics'] = json.loads(record['cash_flow_metrics'])
-  #     # record['income_stmt_metrics_cumulative'] = json.loads(record['income_stmt_metrics_cumulative'])
-  #     # print(record['income_stmt_metrics'], len(record['income_stmt_metrics']))
+      try:
+        response = supabase.table("idx_financial_sheets_quarterly").insert(
+          {
+              'symbol' : record['symbol'],
+              'date' : record['date'],
+              'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+              'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+              'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
+              'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+          }
+          # record
+        ).execute()
+        # print(f"Response: {response}")
+        print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
 
-  #     supabase.table("idx_financials_sheets_quarterly").insert(record).execute()
-  #     print(f"[INSERT] Inserted {record['symbol']}")
+      except Exception as e:
+        print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
 
-  # print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+  print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 
-  # # except Exception as e:
-  # #   print(f"[FAILED] Failed to insert to Database: {e}")
