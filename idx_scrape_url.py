@@ -1,123 +1,24 @@
-from idx_utils import (
-    BASE_URL,
-    create_headers,
-)
-import urllib.request
-import json
-import time
-import os
 from dotenv import load_dotenv
-import requests
 import warnings
 
 load_dotenv()
 
 warnings.simplefilter(action="ignore", category=UserWarning)
 
-PROXY_URL = os.getenv("proxy")
-PROXIES = {
-    "http": PROXY_URL,
-    "https": PROXY_URL,
+_FILE_PERIOD_MAP = {
+    "tw1": "I",
+    "tw2": "II",
+    "tw3": "III",
+    "audit": "Tahunan"
 }
 
+def generate_url(symbol: str, year: int, period: str):
+    symbol = symbol.replace(".JK", "")
+    formatted_period = period.lower().capitalize()
+    file_period = _FILE_PERIOD_MAP[period]
+    return f"/Portals/0/StaticData/ListedCompanies/Corporate_Actions/New_Info_JSX/Jenis_Informasi/01_Laporan_Keuangan/02_Soft_Copy_Laporan_Keuangan//Laporan Keuangan Tahun {year}/{formatted_period}/{symbol}/FinancialStatement-{year}-{file_period}-{symbol}.xlsx"
 
-def fetch_url(
-    period: str, symbol: str, year: str, process: int, use_proxy: bool = False
-):
-    # period = ["tw1", "tw2", "tw3", "audit"]
-    try:
-        url = f"{BASE_URL}/primary/ListedCompany/GetFinancialReport?year={year}&reportType=rdf&EmitenType=s&periode={period}&kodeEmiten={symbol.upper()}&SortColumn=KodeEmiten&SortOrder=asc"
-
-        if not use_proxy:
-            req = urllib.request.Request(url, headers=create_headers())
-            resp = urllib.request.urlopen(req)
-            status_code = resp.getcode()
-        else:
-            response = requests.get(url, proxies=PROXIES, verify=False)
-            status_code = response.status_code
-
-        if status_code == 200:
-            if not use_proxy:
-                data = resp.read()
-                json_data = json.loads(data)
-            else:
-                json_data = response.json()
-
-            if json_data["ResultCount"] > 0:
-                print(
-                    f"[SUCCESS P{process}] Successfully get the data from company {symbol}, year {year}, period {period}"
-                )
-                return json_data, None
-            else:
-                print(
-                    f"[FAILED P{process}] Data is not available for company {symbol}, year {year}, period {period}"
-                )
-                return None, "Data is not available"
-        else:
-            print(
-                f"[FAILED P{process}] Failed to fetch from {url}. Get status code : {status_code}"
-            )
-            return None, f"Status: {status_code}"
-    except Exception as e:
-        print(f"[FAILED P{process}] Failed to fetch from {url} : {e}")
-        return None, f"Failed fetch: {e}"
-
-
-def get_data(symbol_list: list, process: int, year: int, period: str, shared_list: list):
-    RESULT_LIST = []
-    FAILED_LIST = []
-    count = 0
-
-    for symbol in symbol_list:
-        adjusted_symbol = symbol.replace(".JK", "")
-
-        attempt = 0
-        limit_attempts = 3
-        json_data = None
-        while json_data is None and attempt < limit_attempts:
-            json_data, error_msg = fetch_url(period, adjusted_symbol, year, process, False)
-            attempt += 1
-            if json_data is None:
-                if attempt >= limit_attempts:
-                    print(
-                        f"[COMPLETE FAILED] Failed to scrape URL for {symbol} after {limit_attempts} attempts: {error_msg}"
-                    )
-                else:
-                    print(
-                        f"[FAILED] Failed to scrape URL for {symbol} after {attempt} attempts. Retrying..."
-                    )
-
-        if json_data is not None:
-            data_list = json_data["Results"][0]["Attachments"]
-
-            for data in data_list:
-                if (
-                    data["File_Type"] == ".xlsx"
-                    and "FinancialStatement" in data["File_Name"]
-                ):
-
-                    data_dict = {
-                        "symbol": symbol,
-                        "year": year,
-                        "period": "tw4" if period == "audit" else period,
-                        "file_name": data["File_Name"],
-                        "file_url": data["File_Path"],
-                    }
-                    RESULT_LIST.append(data_dict)
-
-        else:
-            data_dict = {
-                "symbol": symbol,
-                "year": year,
-                "period": "tw4" if period == "audit" else period,
-                "error_message" : error_msg
-            }
-            FAILED_LIST.append(data_dict)
-
-        time.sleep(1.5)
-
-        count += 1
-        if count % 20 == 0:
-            print(f"[CHECKPOINT] P{process} has covered {count} data")
-
-    shared_list.append((RESULT_LIST, FAILED_LIST))
+def generate_filename(symbol: str, year: int, period: str):
+    symbol = symbol.replace(".JK", "")
+    file_period = _FILE_PERIOD_MAP[period]
+    return f"FinancialStatement-{year}-{file_period}-{symbol}.xlsx"
