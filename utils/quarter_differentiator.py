@@ -42,8 +42,10 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
       prev_q_data = pd.read_csv(prev_q_path)
       curr_q_data = pd.read_csv(curr_q_path)
       for curr_idx, curr_q_row in curr_q_data.iterrows():
+        found = False
         for _, prev_q_row in prev_q_data.iterrows():
           if (curr_q_row['symbol'] == prev_q_row['symbol']):
+            found = True
             print(f"[PROCESS] Processing {curr_q_row['symbol']}")
 
             if (prev_q_row['income_stmt_metrics_cumulative'] is not None and not pd.isna(prev_q_row['income_stmt_metrics_cumulative'])):
@@ -63,13 +65,15 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
                       # diluted_shares_outstanding is not subtracted
                       current_quarter_data[key] = value
 
+                curr_q_data.at[curr_idx, 'income_stmt_metrics'] = json.dumps(current_quarter_data)
 
               else:
                 print(f"[NONE VALUE CURRENT] None value for current data Ticker {curr_q_row['symbol']}")
             else:
                 print(f"[NONE VALUE PREVIOUS] None value for previous data Ticker {prev_q_row['symbol']}")
         
-        curr_q_data.at[curr_idx, 'income_stmt_metrics'] = json.dumps(current_quarter_data)
+        if (not found):
+           print(f"[NOT AVAILABLE] No available data from previous quarter for {curr_q_row['symbol']}")
       
       curr_q_data.to_csv(result_path, index=False)
       

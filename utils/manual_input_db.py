@@ -21,30 +21,40 @@ if __name__ == "__main__":
   key = os.getenv("SUPABASE_KEY")
   supabase = create_client(url_supabase, key)
   
-  df = pd.read_csv("data/data_quarter.csv")
+  df = pd.read_csv("data/data_annual.csv")
   df = df.drop(['industry_code'], axis=1)
   df = df.replace({np.nan: None})
   data_dict = df.to_dict(orient="records")
-
-  # supabase.table("idx_financial_sheets_quarterly").upsert(data_dict).execute()
 
   for record in data_dict:
       # for k, v in record.items():
       #    print(k, v)
 
       try:
-        response = supabase.table("idx_financial_sheets_quarterly").insert(
+        # # UNCOMMENT TO INSERT QUARTER DATA
+        # response = supabase.table("idx_financial_sheets_quarterly").insert(
+        #   {
+        #       'symbol' : record['symbol'],
+        #       'date' : record['date'],
+        #       'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+        #       'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+        #       'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
+        #       'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+        #   }
+        # ).execute()
+        # print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
+
+
+        # UNCOMMENT TO INSERT ANNUAL DATA
+        response = supabase.table("idx_financial_sheets_annual").insert(
           {
               'symbol' : record['symbol'],
               'date' : record['date'],
               'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
               'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-              'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
-              'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+              'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
           }
-          # record
         ).execute()
-        # print(f"Response: {response}")
         print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
 
       except Exception as e:

@@ -39,3 +39,8 @@ keywords = "data_quarter"
 output = os.path.join(DATA_DIR, f"{keywords}.csv")
 if __name__ == "__main__":
   combine_data(keywords, output, ['symbol', 'date'], [True, True])
+
+# keywords = "data_annual"
+# output = os.path.join(DATA_DIR, f"{keywords}.csv")
+# if __name__ == "__main__":
+#   combine_data(keywords, output, ['symbol', 'date'], [True, True])

@@ -184,7 +184,6 @@ if __name__ == "__main__":
     # ##############################
 
     # Use multiprocess to increase efficiency
-    # all_data = pd.read_csv(os.path.join("data", "url_list.csv"))
     all_data = pd.DataFrame({"symbol": symbol_list, "year": year_arg, "period": period_arg})
     all_data["file_name"] = all_data.apply(lambda x: generate_filename(x.symbol, x.year, x.period), axis=1)
     all_data["file_url"] = all_data.apply(lambda x: generate_url(x.symbol, x.year, x.period), axis=1)
@@ -268,55 +267,55 @@ if __name__ == "__main__":
     logging.info(f"[PROGRESS] Processing execution has finished taking duration of {processing_duration_str}.")
 
 
-    # Inserting to DB
-    if (len(quarter_results) > 0):
-        df = pd.DataFrame(quarter_results)
-        df = df.drop(['industry_code'], axis=1)
-        df = df.replace({np.nan: None})
-        data_dict = df.to_dict(orient="records")
+    # # Inserting to DB
+    # if (len(quarter_results) > 0):
+    #     df = pd.DataFrame(quarter_results)
+    #     df = df.drop(['industry_code'], axis=1)
+    #     df = df.replace({np.nan: None})
+    #     data_dict = df.to_dict(orient="records")
 
 
-        for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_quarterly").insert(
-                {
-                    'symbol' : record['symbol'],
-                    'date' : record['date'],
-                    'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-                    'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-                    'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
-                    'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
-                }
-              ).execute()
-              print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
+    #     for record in data_dict:
+    #         try:
+    #           response = supabase_client.table("idx_financial_sheets_quarterly").insert(
+    #             {
+    #                 'symbol' : record['symbol'],
+    #                 'date' : record['date'],
+    #                 'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+    #                 'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+    #                 'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
+    #                 'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+    #             }
+    #           ).execute()
+    #           print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
 
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+    #         except Exception as e:
+    #           print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+    #     print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 
-    if (len(annual_results) > 0):
-        df = pd.DataFrame(annual_results)
-        df = df.drop(['industry_code'], axis=1)
-        df = df.replace({np.nan: None})
-        data_dict = df.to_dict(orient="records")
+    # if (len(annual_results) > 0):
+    #     df = pd.DataFrame(annual_results)
+    #     df = df.drop(['industry_code'], axis=1)
+    #     df = df.replace({np.nan: None})
+    #     data_dict = df.to_dict(orient="records")
 
 
-        for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_annual").insert(
-                {
-                    'symbol' : record['symbol'],
-                    'date' : record['date'],
-                    'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-                    'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-                    'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
-                }
-              ).execute()
-              print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
+    #     for record in data_dict:
+    #         try:
+    #           response = supabase_client.table("idx_financial_sheets_annual").insert(
+    #             {
+    #                 'symbol' : record['symbol'],
+    #                 'date' : record['date'],
+    #                 'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+    #                 'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+    #                 'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
+    #             }
+    #           ).execute()
+    #           print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
 
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+    #         except Exception as e:
+    #           print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+    #     print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 
