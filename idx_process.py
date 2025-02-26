@@ -10,7 +10,7 @@ from idx_utils import (
     create_headers,
     supabase_client,
     date_format,
-    none_handling_operation
+    none_handling_operation,
 )
 import warnings
 import urllib.request
@@ -31,23 +31,22 @@ PROXIES = {
 
 warnings.simplefilter(action="ignore", category=UserWarning)
 
-def rounding_calc_and_check (num: int, rounding_val: float):
-  num = str(num)
-  power = math.log10(rounding_val)
 
-  idx = len(num)-1
-  count = 0
-  while (idx >= 0 and num[idx] == "0"):
-      count +=1
-      idx -=1
-  
-  if (count >= power):
-    # handling double multiplier case
-    return float(num)
-  else:
-    return none_handling_operation(float(num), rounding_val, "*", False)
-      
+def rounding_calc_and_check(num: int, rounding_val: float):
+    num = str(num)
+    power = math.log10(rounding_val)
 
+    idx = len(num) - 1
+    count = 0
+    while idx >= 0 and num[idx] == "0":
+        count += 1
+        idx -= 1
+
+    if count >= power:
+        # handling double multiplier case
+        return float(num)
+    else:
+        return none_handling_operation(float(num), rounding_val, "*", False)
 
 
 # Used to get the data value where the column name is contained within the list
@@ -57,7 +56,11 @@ def sum_value_equal(df: pd.DataFrame, column_list: list, rounding_val: float):
         if row["Unnamed: 3"] in column_list:
             data_val = (
                 None
-                if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
+                if (
+                    np.isnan(row["Unnamed: 1"])
+                    if row["Unnamed: 1"] is not None
+                    else True
+                )
                 else rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
             )
             result_val = none_handling_operation(result_val, data_val, "+", True)
@@ -94,7 +97,11 @@ def sum_value_range(
             if check_found:
                 data_val = (
                     None
-                    if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
+                    if (
+                        np.isnan(row["Unnamed: 1"])
+                        if row["Unnamed: 1"] is not None
+                        else True
+                    )
                     else rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
                 )
                 result_val = none_handling_operation(result_val, data_val, "+", True)
@@ -105,12 +112,10 @@ def sum_value_range(
 
             starting_point = False
 
-
     if continue_process:
         print(f"[ERROR] Column end {column_end} is not found!")
 
     return result_val
-
 
 
 def load_data_dict(
@@ -167,8 +172,14 @@ def process_balance_sheet(
                 if row["Unnamed: 3"] in column_mapping:
                     data_val = (
                         None
-                        if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
-                        else rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
+                        if (
+                            np.isnan(row["Unnamed: 1"])
+                            if row["Unnamed: 1"] is not None
+                            else True
+                        )
+                        else rounding_calc_and_check(
+                            row["Unnamed: 1"], float(rounding_val)
+                        )
                     )
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
                         for metric in column_mapping[row["Unnamed: 3"]]:
@@ -290,19 +301,23 @@ def process_balance_sheet(
                     "-",
                     False,
                 )
-                balance_sheet_dict["total_earning_asset"] = None # TODO
-                balance_sheet_dict["total_cash_and_due_from_banks"] = none_handling_operation(
-                    sum_value_equal(
-                    df, ["Cash", "Current accounts with bank Indonesia"], rounding_val
-                  ),
-                  sum_value_range(
-                    df,
-                    "Current accounts with other banks",
-                    "Allowance for impairment losses for current accounts with other bank",
-                    rounding_val,
-                  ),
-                  "+",
-                  True
+                balance_sheet_dict["total_earning_asset"] = None  # TODO
+                balance_sheet_dict["total_cash_and_due_from_banks"] = (
+                    none_handling_operation(
+                        sum_value_equal(
+                            df,
+                            ["Cash", "Current accounts with bank Indonesia"],
+                            rounding_val,
+                        ),
+                        sum_value_range(
+                            df,
+                            "Current accounts with other banks",
+                            "Allowance for impairment losses for current accounts with other bank",
+                            rounding_val,
+                        ),
+                        "+",
+                        True,
+                    )
                 )
                 balance_sheet_dict["current_account"] = sum_value_range(
                     df,
@@ -327,25 +342,24 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
-                balance_sheet_dict['other_interest_bearing_liabilities'] = None # TODO
-                balance_sheet_dict['non_interest_bearing_liabilities'] = None # TODO
-                balance_sheet_dict['total_debt'] = None # TODO
-
+                balance_sheet_dict["other_interest_bearing_liabilities"] = None  # TODO
+                balance_sheet_dict["non_interest_bearing_liabilities"] = None  # TODO
+                balance_sheet_dict["total_debt"] = None  # TODO
 
             elif industry_key_idx == 5:  # Securities
                 balance_sheet_dict["cash_only"] = sum_value_equal(
                     df, ["Cash and cash equivalents", "Restricted funds"], rounding_val
                 )
-                balance_sheet_dict['cash_and_short_term_investments'] = None # TODO
-                balance_sheet_dict['total_debt'] = None # TODO
+                balance_sheet_dict["cash_and_short_term_investments"] = None  # TODO
+                balance_sheet_dict["total_debt"] = None  # TODO
 
             elif industry_key_idx == 6:  # Insurance
                 "TODO: waiting unfinalized metrics"
-                balance_sheet_dict['total_cash_and_due_from_banks'] = None # TODO
+                balance_sheet_dict["total_cash_and_due_from_banks"] = None  # TODO
 
             else:  # (industry_key_idx == 8): # Financing
                 "TODO: waiting unfinalized metrics"
-                balance_sheet_dict['total_debt'] = None # TODO
+                balance_sheet_dict["total_debt"] = None  # TODO
 
             return balance_sheet_dict
 
@@ -385,8 +399,14 @@ def process_income_statement(
                 if row["Unnamed: 3"] in column_mapping:
                     data_val = (
                         None
-                        if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
-                        else rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
+                        if (
+                            np.isnan(row["Unnamed: 1"])
+                            if row["Unnamed: 1"] is not None
+                            else True
+                        )
+                        else rounding_calc_and_check(
+                            row["Unnamed: 1"], float(rounding_val)
+                        )
                     )
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
                         for metric in column_mapping[row["Unnamed: 3"]]:
@@ -410,23 +430,29 @@ def process_income_statement(
                     "+",
                     True,
                 )
-                income_statement_dict["non_operating_income_or_loss"] = none_handling_operation(
+                income_statement_dict["non_operating_income_or_loss"] = (
+                    none_handling_operation(
                         income_statement_dict["pretax_income"],
                         income_statement_dict["operating_income"],
                         "-",
                         False,
                     )
+                )
                 income_statement_dict["ebit"] = none_handling_operation(
                     income_statement_dict["pretax_income"],
                     income_statement_dict["interest_expense_non_operating"],
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             elif industry_key_idx == 2:  # Property
@@ -455,11 +481,15 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             elif industry_key_idx == 3:  # Infrastructure
@@ -488,11 +518,15 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             elif industry_key_idx == 4:  # Finance and Sharia
@@ -556,11 +590,15 @@ def process_income_statement(
                     "+",
                     True,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             elif industry_key_idx == 5:  # Securities
@@ -583,24 +621,32 @@ def process_income_statement(
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             elif industry_key_idx == 6:  # Insurance
                 "TODO: waiting unfinalized metrics"
-                income_statement_dict['cost_of_revenue'] = None # TODO
-                income_statement_dict['operating_expense'] = None # TODO
-                income_statement_dict['non_interest_income'] = None # TODO
+                income_statement_dict["cost_of_revenue"] = None  # TODO
+                income_statement_dict["operating_expense"] = None  # TODO
+                income_statement_dict["non_interest_income"] = None  # TODO
 
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             else:  # (industry_key_idx == 8): # Financing
@@ -626,18 +672,22 @@ def process_income_statement(
                     "+",
                     True,
                 )
-                income_statement_dict['interest_expense_non_operating'] = None # TODO
+                income_statement_dict["interest_expense_non_operating"] = None  # TODO
                 income_statement_dict["ebit"] = none_handling_operation(
                     income_statement_dict["pretax_income"],
                     income_statement_dict["interest_expense_non_operating"],
                     "+",
                     False,
                 )
-                income_statement_dict["diluted_shares_outstanding"] = none_handling_operation(
-                    income_statement_dict["profit_attributable_to_parent"],
-                    income_statement_dict["basic_earnings_from_continuing_operations"],
-                    "/",
-                    False,
+                income_statement_dict["diluted_shares_outstanding"] = (
+                    none_handling_operation(
+                        income_statement_dict["profit_attributable_to_parent"],
+                        income_statement_dict[
+                            "basic_earnings_from_continuing_operations"
+                        ],
+                        "/",
+                        False,
+                    )
                 )
 
             return income_statement_dict
@@ -728,8 +778,14 @@ def process_cash_flow(
                 if row["Unnamed: 3"] in column_mapping:
                     data_val = (
                         None
-                        if (row["Unnamed: 1"] is None or np.isnan(row["Unnamed: 1"]))
-                        else rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
+                        if (
+                            np.isnan(row["Unnamed: 1"])
+                            if row["Unnamed: 1"] is not None
+                            else True
+                        )
+                        else rounding_calc_and_check(
+                            row["Unnamed: 1"], float(rounding_val)
+                        )
                     )
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
                         for metric in column_mapping[row["Unnamed: 3"]]:
@@ -759,7 +815,7 @@ def process_cash_flow(
                 cash_flow_dict["cash_inflow"] = None  # TODO
                 cash_flow_dict["net_cash_flow"] = None  # TODO
                 cash_flow_dict["realized_capital_goods_investment"] = None  # TODO
-                cash_flow_dict['free_cash_flow'] = None # TODO
+                cash_flow_dict["free_cash_flow"] = None  # TODO
 
             return cash_flow_dict
 
@@ -787,29 +843,31 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
             response = urllib.request.urlopen(req)
             out_file = open(filename, "wb")
 
-            if (int(response.getcode()) == 200):
+            if int(response.getcode()) == 200:
                 data = response.read()  # Read the response data
                 out_file.write(data)  # Write the data to a file
             else:
                 print(f"[FAILED] Failed to get data status code {response.getcode()}")
 
         else:
-            response = requests.get(url, allow_redirects=True, proxies=PROXIES, verify=False)
+            response = requests.get(
+                url, allow_redirects=True, proxies=PROXIES, verify=False
+            )
 
-            if (int(response.status_code) == 200):
-              # Write the response content to a file
-              with open(filename, "wb") as out_file:
-                  for chunk in response.iter_content(chunk_size=8192):
-                      out_file.write(chunk)
+            if int(response.status_code) == 200:
+                # Write the response content to a file
+                with open(filename, "wb") as out_file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        out_file.write(chunk)
             else:
                 print(f"[FAILED] Failed to get data status code {response.status_code}")
 
         return True
     except urllib.request.HTTPError as httper:
-        print(f"[FAILED] Failed to download excel file: {httper}")
+        print(f"[FAILED] Failed to download excel file for {filename}: {httper}")
         return httper.getcode() == 404
     except Exception as e:
-        print(f"[FAILED] Failed to download excel file: {e}")
+        print(f"[FAILED] Failed to download excel file for {filename}: {e}")
         return False
 
 
@@ -849,7 +907,9 @@ def check_information_sheet(filename: str):
 
 
 # Process the data of a certain excel file
-def process_excel(symbol: str, period: str, year: int, filename: str, rounding_val: int, process: int):
+def process_excel(
+    symbol: str, period: str, year: int, filename: str, rounding_val: int, process: int
+):
     try:
         # Get industry_key_idx
         wb = xl.load_workbook(filename)
@@ -981,6 +1041,13 @@ def process_dataframe(
                             print(
                                 f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
                             )
+                            failed_entry = {
+                                "symbol": symbol,
+                                "year": year_arg,
+                                "period": period_arg,
+                                "error_message": f"Failed to download excel file from {url}",
+                            }
+                            failed_list.append(failed_entry)
                         else:
                             print(
                                 f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
@@ -1001,76 +1068,127 @@ def process_dataframe(
                     rounding_val = check_information_sheet(filename)
 
                     data = process_excel(
-                        row["symbol"], row["period"], row["year"], filename, rounding_val, process
+                        row["symbol"],
+                        row["period"],
+                        row["year"],
+                        filename,
+                        rounding_val,
+                        process,
                     )
                     if data is not None:
-                      # For quarter data, needs further handling.
-                      # On the other side, for annual data, we can directly insert into the store
-                      if row["period"] == "tw4":
-                          annual_data = data.copy()
-                          annual_data["balance_sheet_metrics"] = json.dumps(annual_data["balance_sheet_metrics"]) if (annual_data['balance_sheet_metrics'] is not None) else None
-                          annual_data["income_stmt_metrics"] = json.dumps(annual_data["income_stmt_metrics"]) if (annual_data['income_stmt_metrics'] is not None) else None
-                          annual_data["cash_flow_metrics"] = json.dumps(annual_data["cash_flow_metrics"]) if (annual_data['cash_flow_metrics'] is not None) else None
-                          result_data_list_annual.append(annual_data.copy())
+                        # For quarter data, needs further handling.
+                        # On the other side, for annual data, we can directly insert into the store
+                        if row["period"] == "tw4":
+                            annual_data = data.copy()
+                            annual_data["balance_sheet_metrics"] = (
+                                json.dumps(annual_data["balance_sheet_metrics"])
+                                if (annual_data["balance_sheet_metrics"] is not None)
+                                else None
+                            )
+                            annual_data["income_stmt_metrics"] = (
+                                json.dumps(annual_data["income_stmt_metrics"])
+                                if (annual_data["income_stmt_metrics"] is not None)
+                                else None
+                            )
+                            annual_data["cash_flow_metrics"] = (
+                                json.dumps(annual_data["cash_flow_metrics"])
+                                if (annual_data["cash_flow_metrics"] is not None)
+                                else None
+                            )
+                            result_data_list_annual.append(annual_data)
 
-                      print(
-                          f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
-                      )
+                        print(
+                            f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
+                        )
 
-                      # MARK
-                      # Delete the excel file if the data has been processed
-                      os.remove(filename)
+                        # MARK
+                        # Delete the excel file if the data has been processed
+                        os.remove(filename)
 
-                      # Further handling for quarter data
-                      quarter_data = data.copy()
+                        # Further handling for quarter data
+                        quarter_data = data.copy()
 
-                      # Save cumulative value as it is
-                      quarter_data['income_stmt_metrics_cumulative'] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None
+                        # Save cumulative value as it is
+                        quarter_data["income_stmt_metrics_cumulative"] = (
+                            json.dumps(quarter_data["income_stmt_metrics"])
+                            if (quarter_data["income_stmt_metrics"] is not None)
+                            else None
+                        )
 
-                      # Process the difference for income statement data
-                      if (period_arg != "tw1"):
-                        prev_period_arg_mapping = {
-                            "audit": "tw3",
-                            "tw3": "tw2",
-                            "tw2" : "tw1"
-                        }
+                        # Process the difference for income statement data
+                        if period_arg != "tw1":
+                            prev_period_arg_mapping = {
+                                "audit": "tw3",
+                                "tw3": "tw2",
+                                "tw2": "tw1",
+                            }
 
-                        # Doing recurrent since a quarter Q needs to be subtracted with all the previous quarter in the same year
-                        # For example: value for Q4 is <Q4_in_sheets> - Q3 - Q2 - Q1
-                        # value for Q3 is <Q3_in_sheets> - Q2 - Q1
-                        prev_period_arg = prev_period_arg_mapping[period_arg]
-                        prev_period_date = date_format(prev_period_arg, year_arg)
-                        prev_income_statement_data = (supabase_client.table("idx_financial_sheets_quarterly").select("income_stmt_metrics_cumulative").eq("date", prev_period_date).eq("symbol", symbol).execute()).data
+                            # Doing recurrent since a quarter Q needs to be subtracted with all the previous quarter in the same year
+                            # For example: value for Q4 is <Q4_in_sheets> - Q3 - Q2 - Q1
+                            # value for Q3 is <Q3_in_sheets> - Q2 - Q1
+                            prev_period_arg = prev_period_arg_mapping[period_arg]
+                            prev_period_date = date_format(prev_period_arg, year_arg)
+                            prev_income_statement_data = (
+                                supabase_client.table("idx_financial_sheets_quarterly")
+                                .select("income_stmt_metrics_cumulative")
+                                .eq("date", prev_period_date)
+                                .eq("symbol", symbol)
+                                .execute()
+                            ).data
 
-                        # Subtract if the data exist
-                        if( len(prev_income_statement_data) > 0):
-                          prev_income_statement_data = prev_income_statement_data[0]["income_stmt_metrics_cumulative"]
-                          for key, value in quarter_data["income_stmt_metrics"].items():
-                              if (key != "diluted_shares_outstanding"): # Exception
-                                if (key in prev_income_statement_data):
-                                  prev_val = prev_income_statement_data[key]
-                                  quarter_data['income_stmt_metrics'][key] = none_handling_operation(value, prev_val, "-", False)
-                        else:
-                          quarter_data['income_stmt_metrics'] = None
-                          print(f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!")
+                            # Subtract if the data exist
+                            if (
+                                len(prev_income_statement_data) > 0
+                                and quarter_data["income_stmt_metrics"] is not None
+                            ):
+                                prev_income_statement_data = prev_income_statement_data[
+                                    0
+                                ]["income_stmt_metrics_cumulative"]
+                                for key, value in quarter_data[
+                                    "income_stmt_metrics"
+                                ].items():
+                                    if key != "diluted_shares_outstanding":  # Exception
+                                        if key in prev_income_statement_data:
+                                            prev_val = prev_income_statement_data[key]
+                                            quarter_data["income_stmt_metrics"][key] = (
+                                                none_handling_operation(
+                                                    value, prev_val, "-", False
+                                                )
+                                            )
+                            else:
+                                quarter_data["income_stmt_metrics"] = None
+                                print(
+                                    f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!"
+                                )
 
+                        # Dumps data to jsonb
+                        quarter_data["balance_sheet_metrics"] = (
+                            json.dumps(quarter_data["balance_sheet_metrics"])
+                            if (quarter_data["balance_sheet_metrics"] is not None)
+                            else None
+                        )
+                        quarter_data["income_stmt_metrics"] = (
+                            json.dumps(quarter_data["income_stmt_metrics"])
+                            if (quarter_data["income_stmt_metrics"] is not None)
+                            else None
+                        )
+                        quarter_data["cash_flow_metrics"] = (
+                            json.dumps(quarter_data["cash_flow_metrics"])
+                            if (quarter_data["cash_flow_metrics"] is not None)
+                            else None
+                        )
 
-                      # Dumps data to jsonb
-                      quarter_data["balance_sheet_metrics"] = json.dumps(quarter_data["balance_sheet_metrics"]) if (quarter_data['balance_sheet_metrics'] is not None) else None
-                      quarter_data["income_stmt_metrics"] = json.dumps(quarter_data["income_stmt_metrics"]) if (quarter_data['income_stmt_metrics'] is not None) else None
-                      quarter_data["cash_flow_metrics"] = json.dumps(quarter_data["cash_flow_metrics"]) if (quarter_data['cash_flow_metrics'] is not None) else None
-
-                      # Insert all the data in current_symbol_list_data to result_data_list
-                      result_data_list_quarter.append(quarter_data)
+                        # Insert all the data in current_symbol_list_data to result_data_list
+                        result_data_list_quarter.append(quarter_data)
 
                 except Exception as e:
                     print(f"[FAILED] Failed to open and process {filename} : {e}")
                     failed_entry = {
-                            "symbol": symbol,
-                            "year": year_arg,
-                            "period": period_arg,
-                            "error_message": e
-                        }
+                        "symbol": symbol,
+                        "year": year_arg,
+                        "period": period_arg,
+                        "error_message": e,
+                    }
                     failed_list.append(failed_entry)
 
         # Incremental
