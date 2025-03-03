@@ -3,6 +3,9 @@ import random
 from dotenv import load_dotenv
 from supabase import create_client
 import numpy as np
+from currency_converter import CurrencyConverter
+from datetime import date
+
 
 load_dotenv()
 
@@ -85,3 +88,12 @@ def none_handling_operation(
             elif operation == "*":
                 return num1 * num2
             
+
+# Get rate based for currency
+def get_rate(src_currency:str, date: date = None):
+    c = CurrencyConverter()
+    if (date is None):
+      val = c.convert(1, src_currency, "IDR")
+    else:
+      val = c.convert(1, src_currency, "IDR", date=date)
+    return float(val)

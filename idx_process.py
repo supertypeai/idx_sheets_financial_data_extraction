@@ -11,6 +11,7 @@ from idx_utils import (
     supabase_client,
     date_format,
     none_handling_operation,
+    get_rate
 )
 import warnings
 import urllib.request
@@ -19,6 +20,7 @@ from dotenv import load_dotenv
 import requests
 import json
 import math
+from datetime import date
 
 
 load_dotenv()
@@ -152,6 +154,7 @@ def process_balance_sheet(
     column_mapping: dict,
     metrics: list,
     rounding_val: float,
+    currency_rate: float, 
     industry_key_idx: int,
 ):
     # Balance Sheet
@@ -361,6 +364,10 @@ def process_balance_sheet(
                 "TODO: waiting unfinalized metrics"
                 balance_sheet_dict["total_debt"] = None  # TODO
 
+            # Calculate the currency rate
+            for k, v in balance_sheet_dict.items():
+              balance_sheet_dict[k] = (v * currency_rate) if v is not None else None
+
             return balance_sheet_dict
 
         else:
@@ -380,6 +387,7 @@ def process_income_statement(
     column_mapping: dict,
     metrics: list,
     rounding_val: float,
+    currency_rate: float, 
     industry_key_idx: int,
 ):
     # Income Statement
@@ -406,6 +414,8 @@ def process_income_statement(
                         )
                         else rounding_calc_and_check(
                             row["Unnamed: 1"], float(rounding_val)
+                            if (row['Unnamed: 3'] != "Basic earnings (loss) per share from continuing operations")
+                            else float(row['Unnamed: 1'])
                         )
                     )
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
@@ -690,6 +700,10 @@ def process_income_statement(
                     )
                 )
 
+            # Calculate the currency rate
+            for k, v in income_statement_dict.items():
+              income_statement_dict[k] = (v * currency_rate) if v is not None else None
+
             return income_statement_dict
 
         else:
@@ -708,6 +722,7 @@ def process_additional_metrics(
     sheet_mapping: list[tuple[list[str], dict[str, list[str]]]],
     additional_data: dict,
     rounding_val: float,
+    currency_rate: float, 
     industry_key_idx: int,
 ):
     # Additional metrics
@@ -742,8 +757,15 @@ def process_additional_metrics(
         elif industry_key_idx == 5:  # Securities
             additional_metrics_dict["ebitda"] = None  # TODO
 
-        else:  # (industry_key_idx == 8): # Financing
+        elif industry_key_idx == 8:  # Financing
             additional_metrics_dict["ebitda"] = None  # TODO
+        
+        # Notes:
+        # Bank and Insurance Industries does not have EBITDA
+
+        # Needs to be adjusted if a metric is added into additional_metrics_dict
+        # TODO 
+        additional_metrics_dict["ebitda"] = additional_metrics_dict["ebitda"] * currency_rate if additional_metrics_dict["ebitda"] is not None else None
 
         return additional_metrics_dict
 
@@ -759,6 +781,7 @@ def process_cash_flow(
     column_mapping: dict,
     metrics: list,
     rounding_val: float,
+    currency_rate: float, 
     industry_key_idx: int,
 ):
     # Cash flow
@@ -816,6 +839,10 @@ def process_cash_flow(
                 cash_flow_dict["net_cash_flow"] = None  # TODO
                 cash_flow_dict["realized_capital_goods_investment"] = None  # TODO
                 cash_flow_dict["free_cash_flow"] = None  # TODO
+
+            # Calculate the currency rate
+            for k, v in cash_flow_dict.items():
+              cash_flow_dict[k] = (v * currency_rate) if v is not None else None
 
             return cash_flow_dict
 
@@ -883,7 +910,7 @@ def open_excel_file(filename: str, sheetname: str):
 
 # Checking the first sheet => Information Sheet of the excel
 # Return the rounding level if success, otherwise None
-def check_information_sheet(filename: str):
+def check_information_sheet(filename: str, year_arg: int, period_arg: str):
     try:
         df = open_excel_file(filename, "1000000")
         if df is not None:
@@ -894,12 +921,19 @@ def check_information_sheet(filename: str):
                     for k, v in ROUNDING_LEVEL_MAPPING.items():
                         if k in rounding:
                             rounding_val = v
-            return rounding_val
+                if ("Description of presentation currency" in str(row['Unnamed: 2'])):
+                    currency_symbol = str(row['Unnamed: 1']).split("/")[1].strip()
+                    adjusted_period_arg = "tw4" if period_arg == "audit" else period_arg
+                    date_splitted = date_format(adjusted_period_arg, year_arg).split("-")
+                    date_param = date(int(date_splitted[0]), int(date_splitted[1]), int(date_splitted[2]))
+                    currency_rate = get_rate(currency_symbol, "IDR", date_param)
+                    
+            return rounding_val, currency_rate
         else:
             print(
                 f"[FAILED] Cannot open information sheet in file {filename}. Make sure to input the right file name and sheet name"
             )
-            return None
+            return None, None
 
     except Exception as e:
         print(f"[FAILED] Failed to open Information Sheet: {e}")
@@ -908,7 +942,7 @@ def check_information_sheet(filename: str):
 
 # Process the data of a certain excel file
 def process_excel(
-    symbol: str, period: str, year: int, filename: str, rounding_val: int, process: int
+    symbol: str, period: str, year: int, filename: str, rounding_val: int, currency_rate: float,  process: int
 ):
     try:
         # Get industry_key_idx
@@ -937,6 +971,7 @@ def process_excel(
             mapping_dict["bs_column_mapping"],
             mapping_dict["bs_metrics"],
             rounding_val,
+            currency_rate, 
             industry_key_idx,
         )
         print(f"[IS P{process}] Processing Income Statement ...")
@@ -946,6 +981,7 @@ def process_excel(
             mapping_dict["is_column_mapping"],
             mapping_dict["is_metrics"],
             rounding_val,
+            currency_rate, 
             industry_key_idx,
         )
         print(f"[CF P{process}] Processing Cash Flow ...")
@@ -955,6 +991,7 @@ def process_excel(
             mapping_dict["cf_column_mapping"],
             mapping_dict["cf_metrics"],
             rounding_val,
+            currency_rate, 
             industry_key_idx,
         )
         print(f"[ADD P{process}] Processing Additional Metrics ...")
@@ -963,6 +1000,7 @@ def process_excel(
             mapping_dict["additional_mapping"],
             income_statement_data,
             rounding_val,
+            currency_rate, 
             industry_key_idx,
         )
         try:
@@ -1065,7 +1103,7 @@ def process_dataframe(
                 # Open work book, try to get the industry code
                 try:
                     # Process each excel data
-                    rounding_val = check_information_sheet(filename)
+                    rounding_val, currency_rate = check_information_sheet(filename, year_arg, period_arg)
 
                     data = process_excel(
                         row["symbol"],
@@ -1073,6 +1111,7 @@ def process_dataframe(
                         row["year"],
                         filename,
                         rounding_val,
+                        currency_rate,
                         process,
                     )
                     if data is not None:
