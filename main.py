@@ -154,15 +154,15 @@ if __name__ == "__main__":
     print(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
     logging.info(f"[BATCH PROCESS] Finding batch process (arg: {batch_arg}) for company index {start_idx} to {start_idx+length_list}")
 
-    # SELECTIVE FETCHING
-    # MARK
-    # Implement selection only for data that does not exist in DB
-    period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
-    already_in_db_data = (supabase_client.table("idx_financial_sheets_quarterly").select("symbol").eq("date", period_date).execute()).data
-    already_in_db_list = [data['symbol'] for data in already_in_db_data]
-    for symbol in already_in_db_list:
-        if (symbol in symbol_list):
-            symbol_list.remove(symbol)
+    # # SELECTIVE FETCHING
+    # # MARK
+    # # Implement selection only for data that does not exist in DB
+    # period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
+    # already_in_db_data = (supabase_client.table("idx_financial_sheets_quarterly").select("symbol").eq("date", period_date).execute()).data
+    # already_in_db_list = [data['symbol'] for data in already_in_db_data]
+    # for symbol in already_in_db_list:
+    #     if (symbol in symbol_list):
+    #         symbol_list.remove(symbol)
 
     print(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")
     logging.info(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")

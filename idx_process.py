@@ -922,12 +922,16 @@ def check_information_sheet(filename: str, year_arg: int, period_arg: str):
                         if k in rounding:
                             rounding_val = v
                 if ("Description of presentation currency" in str(row['Unnamed: 2'])):
-                    currency_symbol = str(row['Unnamed: 1']).split("/")[1].strip()
-                    adjusted_period_arg = "tw4" if period_arg == "audit" else period_arg
-                    date_splitted = date_format(adjusted_period_arg, year_arg).split("-")
-                    date_param = date(int(date_splitted[0]), int(date_splitted[1]), int(date_splitted[2]))
-                    currency_rate = get_rate(currency_symbol, "IDR", date_param)
-                    
+                    try:
+                      currency_symbol = str(row['Unnamed: 1']).split("/")[1].strip()
+                      adjusted_period_arg = "tw4" if period_arg == "audit" else period_arg
+                      date_splitted = date_format(adjusted_period_arg, year_arg).split("-")
+                      date_param = date(int(date_splitted[0]), int(date_splitted[1]), int(date_splitted[2]))
+                      currency_rate = get_rate(currency_symbol, date_param)
+                    except Exception as e:
+                      print(f"[FAILED] Failed to process currency rate. Assuming using IDR rate.")
+                      currency_rate = 1
+                      
             return rounding_val, currency_rate
         else:
             print(
@@ -1057,41 +1061,41 @@ def process_dataframe(
         for symbol in scrapped_symbol_list[start_idx : start_idx + range_idx]:
             curr_symbol_df = df[df["symbol"] == symbol]
 
-            # MARK
-            # Download excel file
-            for _, row in curr_symbol_df.iterrows():
-                # File name to be saved
-                filename = os.path.join(
-                    DATA_IDX_SHEETS_DIR,
-                    f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
-                )
-                url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+            # # MARK
+            # # Download excel file
+            # for _, row in curr_symbol_df.iterrows():
+            #     # File name to be saved
+            #     filename = os.path.join(
+            #         DATA_IDX_SHEETS_DIR,
+            #         f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
+            #     )
+            #     url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
 
-                # Make 3 attempts to download the file
-                attempt = 1
-                limit_attempts = 3
-                download_return = False
-                while attempt <= limit_attempts and not download_return:
-                    download_return = download_excel_file(url, filename, False)
-                    attempt += 1
-                    if not download_return:
-                        if attempt > limit_attempts:
-                            print(
-                                f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
-                            )
-                            failed_entry = {
-                                "symbol": symbol,
-                                "year": year_arg,
-                                "period": period_arg,
-                                "error_message": f"Failed to download excel file from {url}",
-                            }
-                            failed_list.append(failed_entry)
-                        else:
-                            print(
-                                f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
-                            )
+            #     # Make 3 attempts to download the file
+            #     attempt = 1
+            #     limit_attempts = 3
+            #     download_return = False
+            #     while attempt <= limit_attempts and not download_return:
+            #         download_return = download_excel_file(url, filename, False)
+            #         attempt += 1
+            #         if not download_return:
+            #             if attempt > limit_attempts:
+            #                 print(
+            #                     f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
+            #                 )
+            #                 failed_entry = {
+            #                     "symbol": symbol,
+            #                     "year": year_arg,
+            #                     "period": period_arg,
+            #                     "error_message": f"Failed to download excel file from {url}",
+            #                 }
+            #                 failed_list.append(failed_entry)
+            #             else:
+            #                 print(
+            #                     f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
+            #                 )
 
-                time.sleep(1)
+            #     time.sleep(1)
 
             # Check the industry of the company the code of the balance sheet
             # Check the code of the Balance Sheet to determine the industry
@@ -1140,9 +1144,9 @@ def process_dataframe(
                             f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
                         )
 
-                        # MARK
-                        # Delete the excel file if the data has been processed
-                        os.remove(filename)
+                        # # MARK
+                        # # Delete the excel file if the data has been processed
+                        # os.remove(filename)
 
                         # Further handling for quarter data
                         quarter_data = data.copy()
