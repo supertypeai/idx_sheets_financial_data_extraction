@@ -924,10 +924,12 @@ def check_information_sheet(filename: str, year_arg: int, period_arg: str):
                 if ("Description of presentation currency" in str(row['Unnamed: 2'])):
                     try:
                       currency_symbol = str(row['Unnamed: 1']).split("/")[1].strip()
-                      adjusted_period_arg = "tw4" if period_arg == "audit" else period_arg
-                      date_splitted = date_format(adjusted_period_arg, year_arg).split("-")
-                      date_param = date(int(date_splitted[0]), int(date_splitted[1]), int(date_splitted[2]))
-                      currency_rate = get_rate(currency_symbol, date_param)
+                      if (currency_symbol == "USD"):
+                        adjusted_period_arg = "tw4" if period_arg == "audit" else period_arg
+                        date_param = date_format(adjusted_period_arg, year_arg)
+                        currency_rate = get_rate(date_param)
+                      else: # Should be IDR
+                        currency_rate = 1
                     except Exception as e:
                       print(f"[FAILED] Failed to process currency rate. Assuming using IDR rate.")
                       currency_rate = 1

@@ -5,6 +5,7 @@ from supabase import create_client
 import numpy as np
 from currency_converter import CurrencyConverter
 from datetime import date
+import json
 
 
 load_dotenv()
@@ -90,10 +91,9 @@ def none_handling_operation(
             
 
 # Get rate based for currency
-def get_rate(src_currency:str, date: date = None):
-    c = CurrencyConverter()
-    if (date is None):
-      val = c.convert(1, src_currency, "IDR")
-    else:
-      val = c.convert(1, src_currency, "IDR", date=date)
-    return float(val)
+def get_rate(date_str: str):
+  f = open(os.path.join(os.getcwd(), "jisdor.json"), "r")
+  data = f.read()
+  json_data = json.loads(data)
+
+  return json_data[date_str]
