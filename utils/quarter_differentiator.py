@@ -104,8 +104,19 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
       curr_q_data.to_csv(result_path, index=False)
       
 
+prev_curr_dict = {
+  "data_quarter_2022_tw1.csv": "data_quarter_2022_tw2.csv",
+  "data_quarter_2022_tw2.csv": "data_quarter_2022_tw3.csv",
+  "data_quarter_2022_tw3.csv": "data_quarter_2022_audit.csv",
+  "data_quarter_2023_tw1.csv": "data_quarter_2023_tw2.csv",
+  "data_quarter_2023_tw2.csv": "data_quarter_2023_tw3.csv",
+  "data_quarter_2023_tw3.csv": "data_quarter_2023_audit.csv",
+  "data_quarter_2024_tw1.csv": "data_quarter_2024_tw2.csv",
+  "data_quarter_2024_tw2.csv": "data_quarter_2024_tw3.csv"
+}
 
-prev_q_path = os.path.join(DATA_DIR, "data_quarter_2024_tw2.csv")
-curr_q_path = os.path.join(DATA_DIR, "data_quarter_2024_tw3.csv")
-result_path = os.path.join(DATA_DIR, "data_quarter_2024_tw3.csv")
-quarter_differentiator(prev_q_path, curr_q_path, result_path)
+for prev, curr in prev_curr_dict.items():
+  prev_q_path = os.path.join(DATA_DIR, prev)
+  curr_q_path = os.path.join(DATA_DIR, curr)
+  result_path = os.path.join(DATA_DIR, curr)
+  quarter_differentiator(prev_q_path, curr_q_path, result_path)

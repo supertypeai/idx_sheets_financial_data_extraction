@@ -1067,41 +1067,41 @@ def process_dataframe(
         for symbol in scrapped_symbol_list[start_idx : start_idx + range_idx]:
             curr_symbol_df = df[df["symbol"] == symbol]
 
-            # # MARK
-            # # Download excel file
-            # for _, row in curr_symbol_df.iterrows():
-            #     # File name to be saved
-            #     filename = os.path.join(
-            #         DATA_IDX_SHEETS_DIR,
-            #         f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
-            #     )
-            #     url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
+            # MARK
+            # Download excel file
+            for _, row in curr_symbol_df.iterrows():
+                # File name to be saved
+                filename = os.path.join(
+                    DATA_IDX_SHEETS_DIR,
+                    f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
+                )
+                url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
 
-            #     # Make 3 attempts to download the file
-            #     attempt = 1
-            #     limit_attempts = 3
-            #     download_return = False
-            #     while attempt <= limit_attempts and not download_return:
-            #         download_return = download_excel_file(url, filename, False)
-            #         attempt += 1
-            #         if not download_return:
-            #             if attempt > limit_attempts:
-            #                 print(
-            #                     f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
-            #                 )
-            #                 failed_entry = {
-            #                     "symbol": symbol,
-            #                     "year": year_arg,
-            #                     "period": period_arg,
-            #                     "error_message": f"Failed to download excel file from {url}",
-            #                 }
-            #                 failed_list.append(failed_entry)
-            #             else:
-            #                 print(
-            #                     f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
-            #                 )
+                # Make 3 attempts to download the file
+                attempt = 1
+                limit_attempts = 3
+                download_return = False
+                while attempt <= limit_attempts and not download_return:
+                    download_return = download_excel_file(url, filename, False)
+                    attempt += 1
+                    if not download_return:
+                        if attempt > limit_attempts:
+                            print(
+                                f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
+                            )
+                            failed_entry = {
+                                "symbol": symbol,
+                                "year": year_arg,
+                                "period": period_arg,
+                                "error_message": f"Failed to download excel file from {url}",
+                            }
+                            failed_list.append(failed_entry)
+                        else:
+                            print(
+                                f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
+                            )
 
-            #     time.sleep(1)
+                time.sleep(1)
 
             # Check the industry of the company the code of the balance sheet
             # Check the code of the Balance Sheet to determine the industry
@@ -1150,9 +1150,9 @@ def process_dataframe(
                             f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
                         )
 
-                        # # MARK
-                        # # Delete the excel file if the data has been processed
-                        # os.remove(filename)
+                        # MARK
+                        # Delete the excel file if the data has been processed
+                        os.remove(filename)
 
                         # Further handling for quarter data
                         quarter_data = data.copy()
