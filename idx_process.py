@@ -1226,6 +1226,16 @@ def process_dataframe(
                         # Insert all the data in current_symbol_list_data to result_data_list
                         result_data_list_quarter.append(quarter_data)
 
+                    else:
+                        print(f"[FAILED] Failed to open and process {filename}")
+                        failed_entry = {
+                            "symbol": symbol,
+                            "year": year_arg,
+                            "period": period_arg,
+                            "error_message": "Unable to open file",
+                        }
+                        failed_list.append(failed_entry)
+
                 except Exception as e:
                     print(f"[FAILED] Failed to open and process {filename} : {e}")
                     failed_entry = {

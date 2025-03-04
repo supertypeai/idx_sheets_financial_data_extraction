@@ -3,8 +3,6 @@ import random
 from dotenv import load_dotenv
 from supabase import create_client
 import numpy as np
-from currency_converter import CurrencyConverter
-from datetime import date
 import json
 
 
