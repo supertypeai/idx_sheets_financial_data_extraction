@@ -35,6 +35,7 @@ warnings.simplefilter(action="ignore", category=UserWarning)
 
 
 def rounding_calc_and_check(num: int, rounding_val: float):
+    if (rounding_val == 1): return float(num)
     num = str(num)
     power = math.log10(rounding_val)
 
@@ -413,10 +414,9 @@ def process_income_statement(
                             else True
                         )
                         else rounding_calc_and_check(
-                            row["Unnamed: 1"], float(rounding_val)
+                            row["Unnamed: 1"], float(rounding_val))
                             if (row['Unnamed: 3'] != "Basic earnings (loss) per share from continuing operations")
                             else float(row['Unnamed: 1'])
-                        )
                     )
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
                         for metric in column_mapping[row["Unnamed: 3"]]:
