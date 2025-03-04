@@ -129,7 +129,7 @@ if __name__ == "__main__":
         .execute()
     )
     df_db_data = pd.DataFrame(db_data.data)
-    symbol_list: list = df_db_data["symbol"].unique().tolist()[:4]
+    symbol_list: list = df_db_data["symbol"].unique().tolist()
     print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
     # Handle for batches
