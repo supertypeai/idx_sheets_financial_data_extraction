@@ -7,14 +7,6 @@ import json
 
 load_dotenv()
 
-def preprocess(data):
-    data_dict = json.loads(data)
-    
-    for k, v in data_dict.items():
-       if (v is not None):
-          data_dict[k] = int(v)
-
-    return data_dict
 
 if __name__ == "__main__":
   url_supabase = os.getenv("SUPABASE_URL")
@@ -36,11 +28,11 @@ if __name__ == "__main__":
         #   {
         #       'symbol' : record['symbol'],
         #       'date' : record['date'],
-        #       'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-        #       'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-        #       'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
-        #       'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
-        #       'cash_flow_metrics_cumulative' : preprocess(record['cash_flow_metrics_cumulative']) if record['cash_flow_metrics_cumulative'] is not None else None
+        #       'income_stmt_metrics' : json.loads(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+        #       'balance_sheet_metrics' : json.loads(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+        #       'cash_flow_metrics' : json.loads(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
+        #       'income_stmt_metrics_cumulative' : json.loads(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+        #       'cash_flow_metrics_cumulative' : json.loads(record['cash_flow_metrics_cumulative']) if record['cash_flow_metrics_cumulative'] is not None else None
         #   }
         # ).execute()
         # print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
@@ -51,9 +43,9 @@ if __name__ == "__main__":
           {
               'symbol' : record['symbol'],
               'date' : record['date'],
-              'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-              'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-              'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
+              'income_stmt_metrics' : json.loads(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+              'balance_sheet_metrics' : json.loads(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+              'cash_flow_metrics' : json.loads(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
           }
         ).execute()
         print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
