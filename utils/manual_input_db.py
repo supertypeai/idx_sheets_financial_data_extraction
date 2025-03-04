@@ -40,6 +40,7 @@ if __name__ == "__main__":
         #       'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
         #       'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
         #       'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+        #       'cash_flow_metrics_cumulative' : preprocess(record['cash_flow_metrics_cumulative']) if record['cash_flow_metrics_cumulative'] is not None else None
         #   }
         # ).execute()
         # print(f"[INSERT] Inserted {record['symbol']} {record['date']}")

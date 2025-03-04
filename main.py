@@ -315,7 +315,7 @@ if __name__ == "__main__":
                 },
                 ignore_duplicates=False
               ).execute()
-              print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
+              print(f"[UPSERT] Upserted {record['symbol']} {record['date']}")
 
             except Exception as e:
               print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")

@@ -1153,10 +1153,16 @@ def process_dataframe(
                         # Further handling for quarter data
                         quarter_data = data.copy()
 
-                        # Save cumulative value as it is
+                        # Save income statement cumulative value as it is
                         quarter_data["income_stmt_metrics_cumulative"] = (
                             json.dumps(quarter_data["income_stmt_metrics"])
                             if (quarter_data["income_stmt_metrics"] is not None)
+                            else None
+                        )
+                        # Save cash flow cumulative value as it is
+                        quarter_data["cash_flow_metrics_cumulative"] = (
+                            json.dumps(quarter_data["cash_flow_metrics"])
+                            if (quarter_data["cash_flow_metrics"] is not None)
                             else None
                         )
 
@@ -1168,25 +1174,23 @@ def process_dataframe(
                                 "tw2": "tw1",
                             }
 
-                            # Doing recurrent since a quarter Q needs to be subtracted with all the previous quarter in the same year
-                            # For example: value for Q4 is <Q4_in_sheets> - Q3 - Q2 - Q1
-                            # value for Q3 is <Q3_in_sheets> - Q2 - Q1
+                            # Doing subtraction since a quarter Q needs to be subtracted with previous Q
                             prev_period_arg = prev_period_arg_mapping[period_arg]
                             prev_period_date = date_format(prev_period_arg, year_arg)
-                            prev_income_statement_data = (
+                            prev_quarter_data = (
                                 supabase_client.table("idx_financial_sheets_quarterly")
-                                .select("income_stmt_metrics_cumulative")
+                                .select("income_stmt_metrics_cumulative", "cash_flow_metrics_cumulative")
                                 .eq("date", prev_period_date)
                                 .eq("symbol", symbol)
                                 .execute()
                             ).data
 
-                            # Subtract if the data exist
+                            # Subtract if the data exist for income statement
                             if (
-                                len(prev_income_statement_data) > 0
+                                len(prev_quarter_data) > 0
                                 and quarter_data["income_stmt_metrics"] is not None
                             ):
-                                prev_income_statement_data = prev_income_statement_data[
+                                prev_income_statement_data = prev_quarter_data[
                                     0
                                 ]["income_stmt_metrics_cumulative"]
                                 for key, value in quarter_data[
@@ -1203,8 +1207,34 @@ def process_dataframe(
                             else:
                                 quarter_data["income_stmt_metrics"] = None
                                 print(
-                                    f"[NOT FOUND] Data for {symbol} with date {prev_period_date} is not found!"
+                                    f"[NOT FOUND] Income Statement Data for {symbol} with date {prev_period_date} is not found!"
                                 )
+                            
+                            # Subtract if the data exist for cash flow
+                            if (
+                                len(prev_quarter_data) > 0
+                                and quarter_data["cash_flow_metrics"] is not None
+                            ):
+                                prev_cash_flow_data = prev_quarter_data[
+                                    0
+                                ]["cash_flow_metrics_cumulative"]
+                                for key, value in quarter_data[
+                                    "cash_flow_metrics"
+                                ].items():
+                                    if key in prev_cash_flow_data:
+                                        prev_val = prev_cash_flow_data[key]
+                                        quarter_data["cash_flow_metrics"][key] = (
+                                            none_handling_operation(
+                                                value, prev_val, "-", False
+                                            )
+                                        )
+                            else:
+                                quarter_data["cash_flow_metrics"] = None
+                                print(
+                                    f"[NOT FOUND] Cash Flow Data for {symbol} with date {prev_period_date} is not found!"
+                                )
+
+                            
 
                         # Dumps data to jsonb
                         quarter_data["balance_sheet_metrics"] = (

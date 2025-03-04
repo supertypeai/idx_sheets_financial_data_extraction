@@ -21,7 +21,7 @@ if __name__ == "__main__":
   key = os.getenv("SUPABASE_KEY")
   supabase = create_client(url_supabase, key)
   
-  df = pd.read_csv("data/data_quarter.csv")
+  df = pd.read_csv("data/data_quarter_2022_tw1.csv")
   df = df.drop(['industry_code'], axis=1)
   df = df.replace({np.nan: None})
   data_dict = df.to_dict(orient="records")
@@ -37,7 +37,8 @@ if __name__ == "__main__":
               "income_stmt_metrics" : preprocess(record["income_stmt_metrics"])  if record["income_stmt_metrics"] is not None else None,
               "balance_sheet_metrics" : preprocess(record["balance_sheet_metrics"]) if record["balance_sheet_metrics"] is not None else None,
               "cash_flow_metrics" : preprocess(record["cash_flow_metrics"]) if record["cash_flow_metrics"] is not None else None,
-              "income_stmt_metrics_cumulative" : preprocess(record["income_stmt_metrics_cumulative"]) if record["income_stmt_metrics_cumulative"] is not None else None
+              "income_stmt_metrics_cumulative" : preprocess(record["income_stmt_metrics_cumulative"]) if record["income_stmt_metrics_cumulative"] is not None else None,
+              "cash_flow_metrics_cumulative" : preprocess(record["cash_flow_metrics_cumulative"]) if record["cash_flow_metrics_cumulative"] is not None else None
           }
         ).eq("symbol", record['symbol']).eq("date", record['date']).execute()
         print(response)
