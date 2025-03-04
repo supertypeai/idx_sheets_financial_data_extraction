@@ -729,7 +729,9 @@ def process_additional_metrics(
     try:
         loaded_metrics = load_data_dict(filename, sheet_mapping, rounding_val)
         # Create dict using metrics template
-        additional_metrics_dict = dict()
+        # Needs to be adjusted if a metric is added into additional_metrics_dict
+        # TODO 
+        additional_metrics_dict = {"ebitda": None}
 
         # Dividing companies based on industries
         # Doing Calculations and Adjustments
@@ -1009,8 +1011,10 @@ def process_excel(
             currency_rate, 
             industry_key_idx,
         )
+
         try:
-            income_statement_data["ebitda"] = additional_data["ebitda"]
+            if (industry_key_idx in [1,2,3,5,8]):
+              income_statement_data["ebitda"] = additional_data["ebitda"]
         except:
             print(f"[ADD P{process}] Fail to insert Additional Metrics")
 
@@ -1185,10 +1189,12 @@ def process_dataframe(
                                 .execute()
                             ).data
 
+
                             # Subtract if the data exist for income statement
                             if (
                                 len(prev_quarter_data) > 0
                                 and quarter_data["income_stmt_metrics"] is not None
+                                and prev_quarter_data[0]['income_stmt_metrics_cumulative'] is not None
                             ):
                                 prev_income_statement_data = prev_quarter_data[
                                     0
@@ -1214,6 +1220,8 @@ def process_dataframe(
                             if (
                                 len(prev_quarter_data) > 0
                                 and quarter_data["cash_flow_metrics"] is not None
+                                and prev_quarter_data[0]['cash_flow_metrics_cumulative'] is not None
+
                             ):
                                 prev_cash_flow_data = prev_quarter_data[
                                     0

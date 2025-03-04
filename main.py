@@ -138,7 +138,7 @@ if __name__ == "__main__":
         .execute()
     )
     df_db_data = pd.DataFrame(db_data.data)
-    symbol_list: list = df_db_data["symbol"].unique().tolist()
+    symbol_list: list = df_db_data["symbol"].unique().tolist()[:4]
     print(f"[DATABASE] Get {len(symbol_list)} data from database")
 
     # Handle for batches
@@ -240,7 +240,7 @@ if __name__ == "__main__":
     if len(quarter_results) != 0:
         dataframe_quarter = pd.DataFrame(quarter_results)
         filename_store_quarter = os.path.join(
-            DATA_DIR, f"data_quarter.csv"
+            DATA_DIR, f"data_quarter_{year_arg}_{period_arg}.csv"
         )
         dataframe_quarter.to_csv(filename_store_quarter, index=False)
         print(f"[COMPLETED] Quarter data has been stored in {filename_store_quarter}")
@@ -248,14 +248,14 @@ if __name__ == "__main__":
     if len(annual_results) != 0:
         dataframe_annual = pd.DataFrame(annual_results)
         filename_store_annual = os.path.join(
-            DATA_DIR, f"data_annual.csv"
+            DATA_DIR, f"data_annual_{year_arg}.csv"
         )
         dataframe_annual.to_csv(filename_store_annual, index=False)
         print(f"[COMPLETED] Annual data has been stored in {filename_store_annual}")
     if len(failed_results) != 0:
         dataframe_failed = pd.DataFrame(failed_results)
         filename_store_failed = os.path.join(
-            DATA_DIR, f"failed_list.csv"
+            DATA_DIR, f"failed_list_{year_arg}_{period_arg}.csv"
         )
         dataframe_failed.to_csv(filename_store_failed, index=False)
         print(f"[COMPLETED] Failed data has been stored in {filename_store_failed}")
@@ -268,57 +268,57 @@ if __name__ == "__main__":
     logging.info(f"[PROGRESS] Processing execution has finished taking duration of {processing_duration_str}.")
 
 
-    # Inserting to DB
-    if (len(quarter_results) > 0):
-        df = pd.DataFrame(quarter_results)
-        df = df.drop(['industry_code'], axis=1)
-        df = df.replace({np.nan: None})
-        data_dict = df.to_dict(orient="records")
+    # # Inserting to DB
+    # if (len(quarter_results) > 0):
+    #     df = pd.DataFrame(quarter_results)
+    #     df = df.drop(['industry_code'], axis=1)
+    #     df = df.replace({np.nan: None})
+    #     data_dict = df.to_dict(orient="records")
 
 
-        for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_quarterly").upsert(
-                {
-                    'symbol' : record['symbol'],
-                    'date' : record['date'],
-                    'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-                    'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-                    'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
-                    'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
-                },
-                ignore_duplicates=False
-              ).execute()
-              print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
+    #     for record in data_dict:
+    #         try:
+    #           response = supabase_client.table("idx_financial_sheets_quarterly").upsert(
+    #             {
+    #                 'symbol' : record['symbol'],
+    #                 'date' : record['date'],
+    #                 'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+    #                 'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+    #                 'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
+    #                 'income_stmt_metrics_cumulative' : preprocess(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None
+    #             },
+    #             ignore_duplicates=False
+    #           ).execute()
+    #           print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
 
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+    #         except Exception as e:
+    #           print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+    #     print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 
-    if (len(annual_results) > 0):
-        df = pd.DataFrame(annual_results)
-        df = df.drop(['industry_code'], axis=1)
-        df = df.replace({np.nan: None})
-        data_dict = df.to_dict(orient="records")
+    # if (len(annual_results) > 0):
+    #     df = pd.DataFrame(annual_results)
+    #     df = df.drop(['industry_code'], axis=1)
+    #     df = df.replace({np.nan: None})
+    #     data_dict = df.to_dict(orient="records")
 
 
-        for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_annual").upsert(
-                {
-                    'symbol' : record['symbol'],
-                    'date' : record['date'],
-                    'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-                    'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-                    'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
-                },
-                ignore_duplicates=False
-              ).execute()
-              print(f"[UPSERT] Upserted {record['symbol']} {record['date']}")
+    #     for record in data_dict:
+    #         try:
+    #           response = supabase_client.table("idx_financial_sheets_annual").upsert(
+    #             {
+    #                 'symbol' : record['symbol'],
+    #                 'date' : record['date'],
+    #                 'income_stmt_metrics' : preprocess(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
+    #                 'balance_sheet_metrics' : preprocess(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+    #                 'cash_flow_metrics' : preprocess(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
+    #             },
+    #             ignore_duplicates=False
+    #           ).execute()
+    #           print(f"[UPSERT] Upserted {record['symbol']} {record['date']}")
 
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+    #         except Exception as e:
+    #           print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+    #     print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 

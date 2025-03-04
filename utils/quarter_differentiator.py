@@ -48,6 +48,7 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
             found = True
             print(f"[PROCESS] Processing {curr_q_row['symbol']}")
 
+            # Income Statement
             if (prev_q_row['income_stmt_metrics_cumulative'] is not None and not pd.isna(prev_q_row['income_stmt_metrics_cumulative'])):
               prev_income_stmt_cumulative = json.loads(prev_q_row['income_stmt_metrics_cumulative'])
 
@@ -68,9 +69,34 @@ def quarter_differentiator(prev_q_path: str, curr_q_path: str, result_path: str)
                 curr_q_data.at[curr_idx, 'income_stmt_metrics'] = json.dumps(current_quarter_data)
 
               else:
-                print(f"[NONE VALUE CURRENT] None value for current data Ticker {curr_q_row['symbol']}")
+                print(f"[NONE VALUE CURRENT] None value for current income statement data Ticker {curr_q_row['symbol']}")
             else:
-                print(f"[NONE VALUE PREVIOUS] None value for previous data Ticker {prev_q_row['symbol']}")
+                print(f"[NONE VALUE PREVIOUS] None value for previous income statement data Ticker {prev_q_row['symbol']}")
+
+            ###################
+            # Cash Flow
+            if (prev_q_row['cash_flow_metrics_cumulative'] is not None and not pd.isna(prev_q_row['cash_flow_metrics_cumulative'])):
+              prev_cash_flow_cumulative = json.loads(prev_q_row['cash_flow_metrics_cumulative'])
+
+              if (curr_q_row['cash_flow_metrics_cumulative'] is not None and not pd.isna(curr_q_row['cash_flow_metrics_cumulative'])):
+                curr_quarter_data = json.loads(curr_q_row['cash_flow_metrics_cumulative'])
+
+                current_quarter_data = {}
+                # Subtract if the data exist
+                for key, value in curr_quarter_data.items():
+                    if (key in prev_cash_flow_cumulative):
+                      prev_val = prev_cash_flow_cumulative[key]
+                      current_quarter_data[key] = none_handling_operation(value, prev_val, "-", False)
+                    else:
+                      # diluted_shares_outstanding is not subtracted
+                      current_quarter_data[key] = value
+
+                curr_q_data.at[curr_idx, 'cash_flow_metrics'] = json.dumps(current_quarter_data)
+
+              else:
+                print(f"[NONE VALUE CURRENT] None value for current cash flow data Ticker {curr_q_row['symbol']}")
+            else:
+                print(f"[NONE VALUE PREVIOUS] None value for previous cash flow data Ticker {prev_q_row['symbol']}")
         
         if (not found):
            print(f"[NOT AVAILABLE] No available data from previous quarter for {curr_q_row['symbol']}")

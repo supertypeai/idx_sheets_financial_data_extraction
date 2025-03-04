@@ -21,7 +21,7 @@ if __name__ == "__main__":
   key = os.getenv("SUPABASE_KEY")
   supabase = create_client(url_supabase, key)
   
-  df = pd.read_csv("data/data_quarter_2022_tw1.csv")
+  df = pd.read_csv("data/data_quarter_2022_tw2.csv")
   df = df.drop(['industry_code'], axis=1)
   df = df.replace({np.nan: None})
   data_dict = df.to_dict(orient="records")
