@@ -831,7 +831,7 @@ def process_cash_flow(
                 cash_flow_dict["free_cash_flow"] = none_handling_operation(
                     cash_flow_dict["operating_cash_flow"],
                     cash_flow_dict["capital_expenditure"],
-                    "+",
+                    "-",
                     False,
                 )
             else:  # (industry_key == 4)
