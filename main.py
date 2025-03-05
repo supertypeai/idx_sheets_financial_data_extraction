@@ -259,6 +259,7 @@ if __name__ == "__main__":
     logging.info(f"[PROGRESS] Processing execution has finished taking duration of {processing_duration_str}.")
 
 
+    # MARK
     # Inserting to DB
     if (len(quarter_results) > 0):
         df = pd.DataFrame(quarter_results)

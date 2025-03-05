@@ -702,7 +702,9 @@ def process_income_statement(
 
             # Calculate the currency rate
             for k, v in income_statement_dict.items():
-              income_statement_dict[k] = (v * currency_rate) if v is not None else None
+              if (k != "diluted_shares_outstanding"):
+                # Exception for `diluted shares oustanding` should not be multiplied by currency_rate
+                income_statement_dict[k] = (v * currency_rate) if v is not None else None
 
             return income_statement_dict
 
