@@ -148,12 +148,12 @@ if __name__ == "__main__":
     # SELECTIVE FETCHING
     # MARK
     # Implement selection only for data that does not exist in DB
-    period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
-    already_in_db_data = (supabase_client.table("idx_financial_sheets_quarterly").select("symbol").eq("date", period_date).execute()).data
-    already_in_db_list = [data['symbol'] for data in already_in_db_data]
-    for symbol in already_in_db_list:
-        if (symbol in symbol_list):
-            symbol_list.remove(symbol)
+    # period_date = date_format(period_arg if period_arg != "audit" else "tw4", year_arg)
+    # already_in_db_data = (supabase_client.table("idx_financial_sheets_quarterly").select("symbol").eq("date", period_date).execute()).data
+    # already_in_db_list = [data['symbol'] for data in already_in_db_data]
+    # for symbol in already_in_db_list:
+    #     if (symbol in symbol_list):
+    #         symbol_list.remove(symbol)
 
     print(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")
     logging.info(f"[SELECTION PROCESS] After selection process, amount of companies that will be scraped is {len(symbol_list)}")
@@ -267,10 +267,9 @@ if __name__ == "__main__":
         df = df.replace({np.nan: None})
         data_dict = df.to_dict(orient="records")
 
-
+        quarterly_data = []
         for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_quarterly").upsert(
+            quarterly_data.append(
                 {
                     'symbol' : record['symbol'],
                     'date' : record['date'],
@@ -279,13 +278,15 @@ if __name__ == "__main__":
                     'cash_flow_metrics' : json.loads(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None,
                     'income_stmt_metrics_cumulative' : json.loads(record['income_stmt_metrics_cumulative']) if record['income_stmt_metrics_cumulative'] is not None else None,
                     'cash_flow_metrics_cumulative' : json.loads(record['cash_flow_metrics_cumulative']) if record['cash_flow_metrics_cumulative'] is not None else None
-                },
-                ignore_duplicates=False
-              ).execute()
-              print(f"[INSERT] Inserted {record['symbol']} {record['date']}")
-
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+                }
+            )
+        try:
+          response = supabase_client.table("idx_financial_sheets_quarterly").upsert(
+            quarterly_data,
+            ignore_duplicates=False
+          ).execute()
+        except Exception as e:
+          print(f"[FAILED] Failed to upsert quarter to Database: {e}")
 
         print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 
@@ -295,23 +296,25 @@ if __name__ == "__main__":
         df = df.replace({np.nan: None})
         data_dict = df.to_dict(orient="records")
 
-
+        annual_data = []
         for record in data_dict:
-            try:
-              response = supabase_client.table("idx_financial_sheets_annual").upsert(
+            annual_data.append(
                 {
-                    'symbol' : record['symbol'],
-                    'date' : record['date'],
-                    'income_stmt_metrics' : json.loads(record['income_stmt_metrics'])  if record['income_stmt_metrics'] is not None else None,
-                    'balance_sheet_metrics' : json.loads(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
-                    'cash_flow_metrics' : json.loads(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
-                },
-                ignore_duplicates=False
-              ).execute()
-              print(f"[UPSERT] Upserted {record['symbol']} {record['date']}")
+                    'symbol': record['symbol'],
+                    'date': record['date'],
+                    'income_stmt_metrics': json.loads(record['income_stmt_metrics']) if record['income_stmt_metrics'] is not None else None,
+                    'balance_sheet_metrics': json.loads(record['balance_sheet_metrics']) if record['balance_sheet_metrics'] is not None else None,
+                    'cash_flow_metrics': json.loads(record['cash_flow_metrics']) if record['cash_flow_metrics'] is not None else None
+                }
+            )
 
-            except Exception as e:
-              print(f"[FAILED] Failed to insert {record['symbol']} {record['date']} to Database: {e}")
+        try:
+          response = supabase_client.table("idx_financial_sheets_annual").upsert(
+            annual_data,
+            ignore_duplicates=False
+          ).execute()
+        except Exception as e:
+          print(f"[FAILED] Failed to upsert annual to Database: {e}")
 
         print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
 

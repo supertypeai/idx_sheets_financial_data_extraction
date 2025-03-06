@@ -437,7 +437,7 @@ def process_income_statement(
                 income_statement_dict["operating_income"] = none_handling_operation(
                     income_statement_dict["gross_income"],
                     income_statement_dict["operating_expense"],
-                    "+",
+                    "-",
                     True,
                 )
                 income_statement_dict["non_operating_income_or_loss"] = (
@@ -474,7 +474,7 @@ def process_income_statement(
                 income_statement_dict["operating_income"] = none_handling_operation(
                     income_statement_dict["gross_income"],
                     income_statement_dict["operating_expense"],
-                    "+",
+                    "-",
                     True,
                 )
                 income_statement_dict["non_operating_income_or_loss"] = (
@@ -511,7 +511,7 @@ def process_income_statement(
                 income_statement_dict["operating_income"] = none_handling_operation(
                     income_statement_dict["gross_income"],
                     income_statement_dict["operating_expense"],
-                    "+",
+                    "-",
                     True,
                 )
                 income_statement_dict["non_operating_income_or_loss"] = (
