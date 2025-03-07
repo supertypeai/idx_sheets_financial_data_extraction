@@ -406,18 +406,21 @@ def process_income_statement(
         if df is not None:
             for _, row in df.iterrows():
                 if row["Unnamed: 3"] in column_mapping:
-                    data_val = (
-                        None
-                        if (
-                            np.isnan(row["Unnamed: 1"])
-                            if row["Unnamed: 1"] is not None
-                            else True
-                        )
-                        else rounding_calc_and_check(
-                            row["Unnamed: 1"], float(rounding_val))
-                            if (row['Unnamed: 3'] != "Basic earnings (loss) per share from continuing operations")
-                            else float(row['Unnamed: 1'])
-                    )
+                    if (np.isnan(row["Unnamed: 1"]) if row["Unnamed: 1"] is not None else True):
+                        data_val = None
+                    else:
+                        if ((row['Unnamed: 3'] == "Basic earnings (loss) per share from continuing operations")):
+                            # Exception case for Basic earnings
+                            if (abs(float(row['Unnamed: 1'])) < 1e-10):
+                                # Handling for doesnt make sense value
+                                data_val = None
+                            else:
+                              data_val = float(row['Unnamed: 1'])
+                        else:
+                            data_val = rounding_calc_and_check(row["Unnamed: 1"], float(rounding_val))
+
+                            
+
                     if (type(column_mapping[row["Unnamed: 3"]])) == list:
                         for metric in column_mapping[row["Unnamed: 3"]]:
                             income_statement_dict[metric] = data_val
