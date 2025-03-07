@@ -700,6 +700,14 @@ def process_income_statement(
                     )
                 )
 
+            # All industries
+            income_statement_dict["income_taxes"] = none_handling_operation(
+                0,
+                income_statement_dict["income_taxes"],
+                "-",
+                True,
+            )
+
             # Calculate the currency rate
             for k, v in income_statement_dict.items():
               if (k != "diluted_shares_outstanding"):
