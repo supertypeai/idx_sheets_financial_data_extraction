@@ -129,4 +129,4 @@ https://www.idx.co.id/Portals/0/StaticData/ListedCompanies/Corporate_Actions/New
 ```
 
 Notes: 
-- There is a possibility that the file itself is not available in the IDX, resuling `404 page`
+- There is a possibility that the file itself is not available in the IDX, resulting `404 page`
