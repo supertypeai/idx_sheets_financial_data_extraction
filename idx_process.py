@@ -1096,7 +1096,7 @@ def process_dataframe(
                 limit_attempts = 3
                 download_return = False
                 while attempt <= limit_attempts and not download_return:
-                    download_return = download_excel_file(url, filename, False)
+                    download_return = download_excel_file(url, filename, True)
                     attempt += 1
                     if not download_return:
                         if attempt > limit_attempts:
