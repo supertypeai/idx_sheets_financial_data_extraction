@@ -32,11 +32,11 @@ Interval (30 + 7) for Quarter
 if it runs in:
   Month 3: 
   -> get annual and Q4 of last year
-  Month 4:
+  Month 5:
   -> get Q1 of current year
-  Month 7:
+  Month 8:
   -> get Q2 of current year
-  Month 10: 
+  Month 11: 
   -> get Q3 of current year
 
 BATCH = [1, 2, 3, 4, all]
