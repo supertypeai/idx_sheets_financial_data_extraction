@@ -411,7 +411,8 @@ def process_income_statement(
                     else:
                         if ((row['Unnamed: 3'] == "Basic earnings (loss) per share from continuing operations")):
                             # Exception case for Basic earnings
-                            if (abs(float(row['Unnamed: 1'])) < 1e-10):
+                            threshold = 1e-5 if currency_rate == 1 else 1e-10
+                            if (abs(float(row['Unnamed: 1'])) < threshold):
                                 # Handling for doesnt make sense value
                                 data_val = None
                             else:
