@@ -35,10 +35,10 @@ def combine_data(keywords:str, output_path:str, sort_columns: list, sort_ascendi
 # if __name__ == "__main__":
 #   combine_data(keywords, output, ['symbol', 'year', 'period'], [True, True, True])
 
-# keywords = "data_quarter"
-# output = os.path.join(DATA_DIR, f"{keywords}.csv")
-# if __name__ == "__main__":
-#   combine_data(keywords, output, ['symbol', 'date'], [True, True])
+keywords = "data_quarter"
+output = os.path.join(DATA_DIR, f"{keywords}.csv")
+if __name__ == "__main__":
+  combine_data(keywords, output, ['symbol', 'date'], [True, True])
 
 keywords = "data_annual"
 output = os.path.join(DATA_DIR, f"{keywords}.csv")

@@ -1065,241 +1065,226 @@ def process_dataframe(
         f"[PROGRESS] {data_length} data of {symbol_data_length} companies are available to be scraped"
     )
 
-    # Range limit is the symbol of file to be downloaded and processed at a time
-    start_idx = 0
-    range_limit = 5
-
     # Container for Data
     result_data_list_quarter = list()
     result_data_list_annual = list()
     failed_list = list()
 
-    while start_idx < symbol_data_length:
-        range_idx = min(symbol_data_length - start_idx, range_limit)
+    # Iterate each symbol based on the range_limit
+    for symbol in scrapped_symbol_list:
+        curr_symbol_df = df[df["symbol"] == symbol]
+        row = curr_symbol_df.iloc[0]
+      
+        # MARK
+        # Download excel file
+        filename = os.path.join(
+            DATA_IDX_SHEETS_DIR,
+            f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
+        )
+        url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
 
-        # Iterate each symbol based on the range_limit
-        for symbol in scrapped_symbol_list[start_idx : start_idx + range_idx]:
-            curr_symbol_df = df[df["symbol"] == symbol]
-
-            # MARK
-            # Download excel file
-            for _, row in curr_symbol_df.iterrows():
-                # File name to be saved
-                filename = os.path.join(
-                    DATA_IDX_SHEETS_DIR,
-                    f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
-                )
-                url = f"{BASE_URL}{row['file_url']}".replace(" ", "%20")
-
-                # Make 3 attempts to download the file
-                attempt = 1
-                limit_attempts = 3
-                download_return = False
-                while attempt <= limit_attempts and not download_return:
-                    download_return = download_excel_file(url, filename, True)
-                    attempt += 1
-                    if not download_return:
-                        if attempt > limit_attempts:
-                            print(
-                                f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
-                            )
-                            failed_entry = {
-                                "symbol": symbol,
-                                "year": year_arg,
-                                "period": period_arg,
-                                "error_message": f"Failed to download excel file from {url}",
-                            }
-                            failed_list.append(failed_entry)
-                        else:
-                            print(
-                                f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
-                            )
-
-                time.sleep(1)
-
-            # Check the industry of the company the code of the balance sheet
-            # Check the code of the Balance Sheet to determine the industry
-            for _, row in curr_symbol_df.iterrows():
-                filename = os.path.join(
-                    DATA_IDX_SHEETS_DIR,
-                    f"{row['symbol']}_{row['year']}_{row['period']}.xlsx",
-                )
-                # Open work book, try to get the industry code
-                try:
-                    # Process each excel data
-                    rounding_val, currency_rate = check_information_sheet(filename, year_arg, period_arg)
-
-                    data = process_excel(
-                        row["symbol"],
-                        row["period"],
-                        row["year"],
-                        filename,
-                        rounding_val,
-                        currency_rate,
-                        process,
+        # Make 3 attempts to download the file
+        attempt = 1
+        limit_attempts = 3
+        download_return = False
+        while attempt <= limit_attempts and not download_return:
+            download_return = download_excel_file(url, filename, False)
+            attempt += 1
+            if not download_return:
+                if attempt > limit_attempts:
+                    print(
+                        f"[COMPLETE FAILED] Failed to download excel file from {url} after {limit_attempts} attempts"
                     )
-                    if data is not None:
-                        # For quarter data, needs further handling.
-                        # On the other side, for annual data, we can directly insert into the store
-                        if row["period"] == "tw4":
-                            annual_data = data.copy()
-                            annual_data["balance_sheet_metrics"] = (
-                                json.dumps(annual_data["balance_sheet_metrics"])
-                                if (annual_data["balance_sheet_metrics"] is not None)
-                                else None
-                            )
-                            annual_data["income_stmt_metrics"] = (
-                                json.dumps(annual_data["income_stmt_metrics"])
-                                if (annual_data["income_stmt_metrics"] is not None)
-                                else None
-                            )
-                            annual_data["cash_flow_metrics"] = (
-                                json.dumps(annual_data["cash_flow_metrics"])
-                                if (annual_data["cash_flow_metrics"] is not None)
-                                else None
-                            )
-                            result_data_list_annual.append(annual_data)
-
-                        print(
-                            f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
-                        )
-
-                        # MARK
-                        # Delete the excel file if the data has been processed
-                        os.remove(filename)
-
-                        # Further handling for quarter data
-                        quarter_data = data.copy()
-
-                        # Save income statement cumulative value as it is
-                        quarter_data["income_stmt_metrics_cumulative"] = (
-                            json.dumps(quarter_data["income_stmt_metrics"])
-                            if (quarter_data["income_stmt_metrics"] is not None)
-                            else None
-                        )
-                        # Save cash flow cumulative value as it is
-                        quarter_data["cash_flow_metrics_cumulative"] = (
-                            json.dumps(quarter_data["cash_flow_metrics"])
-                            if (quarter_data["cash_flow_metrics"] is not None)
-                            else None
-                        )
-
-                        # Process the difference for income statement data
-                        if period_arg != "tw1":
-                            prev_period_arg_mapping = {
-                                "audit": "tw3",
-                                "tw3": "tw2",
-                                "tw2": "tw1",
-                            }
-
-                            # Doing subtraction since a quarter Q needs to be subtracted with previous Q
-                            prev_period_arg = prev_period_arg_mapping[period_arg]
-                            prev_period_date = date_format(prev_period_arg, year_arg)
-                            prev_quarter_data = (
-                                supabase_client.table("idx_financial_sheets_quarterly")
-                                .select("income_stmt_metrics_cumulative", "cash_flow_metrics_cumulative")
-                                .eq("date", prev_period_date)
-                                .eq("symbol", symbol)
-                                .execute()
-                            ).data
-
-
-                            # Subtract if the data exist for income statement
-                            if (
-                                len(prev_quarter_data) > 0
-                                and quarter_data["income_stmt_metrics"] is not None
-                                and prev_quarter_data[0]['income_stmt_metrics_cumulative'] is not None
-                            ):
-                                prev_income_statement_data = prev_quarter_data[
-                                    0
-                                ]["income_stmt_metrics_cumulative"]
-                                for key, value in quarter_data[
-                                    "income_stmt_metrics"
-                                ].items():
-                                    if key != "diluted_shares_outstanding":  # Exception
-                                        if key in prev_income_statement_data:
-                                            prev_val = prev_income_statement_data[key]
-                                            quarter_data["income_stmt_metrics"][key] = (
-                                                none_handling_operation(
-                                                    value, prev_val, "-", False
-                                                )
-                                            )
-                            else:
-                                quarter_data["income_stmt_metrics"] = None
-                                print(
-                                    f"[NOT FOUND] Income Statement Data for {symbol} with date {prev_period_date} is not found!"
-                                )
-                            
-                            # Subtract if the data exist for cash flow
-                            if (
-                                len(prev_quarter_data) > 0
-                                and quarter_data["cash_flow_metrics"] is not None
-                                and prev_quarter_data[0]['cash_flow_metrics_cumulative'] is not None
-
-                            ):
-                                prev_cash_flow_data = prev_quarter_data[
-                                    0
-                                ]["cash_flow_metrics_cumulative"]
-                                for key, value in quarter_data[
-                                    "cash_flow_metrics"
-                                ].items():
-                                    if key in prev_cash_flow_data:
-                                        prev_val = prev_cash_flow_data[key]
-                                        quarter_data["cash_flow_metrics"][key] = (
-                                            none_handling_operation(
-                                                value, prev_val, "-", False
-                                            )
-                                        )
-                            else:
-                                quarter_data["cash_flow_metrics"] = None
-                                print(
-                                    f"[NOT FOUND] Cash Flow Data for {symbol} with date {prev_period_date} is not found!"
-                                )
-
-                            
-
-                        # Dumps data to jsonb
-                        quarter_data["balance_sheet_metrics"] = (
-                            json.dumps(quarter_data["balance_sheet_metrics"])
-                            if (quarter_data["balance_sheet_metrics"] is not None)
-                            else None
-                        )
-                        quarter_data["income_stmt_metrics"] = (
-                            json.dumps(quarter_data["income_stmt_metrics"])
-                            if (quarter_data["income_stmt_metrics"] is not None)
-                            else None
-                        )
-                        quarter_data["cash_flow_metrics"] = (
-                            json.dumps(quarter_data["cash_flow_metrics"])
-                            if (quarter_data["cash_flow_metrics"] is not None)
-                            else None
-                        )
-
-                        # Insert all the data in current_symbol_list_data to result_data_list
-                        result_data_list_quarter.append(quarter_data)
-
-                    else:
-                        print(f"[FAILED] Failed to open and process {filename}")
-                        failed_entry = {
-                            "symbol": symbol,
-                            "year": year_arg,
-                            "period": period_arg,
-                            "error_message": "Unable to open file",
-                        }
-                        failed_list.append(failed_entry)
-
-                except Exception as e:
-                    print(f"[FAILED] Failed to open and process {filename} : {e}")
                     failed_entry = {
                         "symbol": symbol,
                         "year": year_arg,
                         "period": period_arg,
-                        "error_message": e,
+                        "error_message": f"Failed to download excel file from {url}",
                     }
                     failed_list.append(failed_entry)
+                else:
+                    print(
+                        f"[FAILED] Failed to download excel file from {url} after {attempt} attempts. Retrying..."
+                    )
 
-        # Incremental
-        start_idx += range_idx
+        time.sleep(1.5)
+
+        # Check the industry of the company the code of the balance sheet
+        # Check the code of the Balance Sheet to determine the industry
+        # Open work book, try to get the industry code
+        try:
+            # Process each excel data
+            rounding_val, currency_rate = check_information_sheet(filename, year_arg, period_arg)
+
+            data = process_excel(
+                row["symbol"],
+                row["period"],
+                row["year"],
+                filename,
+                rounding_val,
+                currency_rate,
+                process,
+            )
+            if data is not None:
+                # For quarter data, needs further handling.
+                # On the other side, for annual data, we can directly insert into the store
+                if row["period"] == "tw4":
+                    annual_data = data.copy()
+                    annual_data["balance_sheet_metrics"] = (
+                        json.dumps(annual_data["balance_sheet_metrics"])
+                        if (annual_data["balance_sheet_metrics"] is not None)
+                        else None
+                    )
+                    annual_data["income_stmt_metrics"] = (
+                        json.dumps(annual_data["income_stmt_metrics"])
+                        if (annual_data["income_stmt_metrics"] is not None)
+                        else None
+                    )
+                    annual_data["cash_flow_metrics"] = (
+                        json.dumps(annual_data["cash_flow_metrics"])
+                        if (annual_data["cash_flow_metrics"] is not None)
+                        else None
+                    )
+                    result_data_list_annual.append(annual_data)
+
+                print(
+                    f"[SUCCESS] Successfully get the data for {symbol} period {row['period']} year {row['year']}"
+                )
+
+                # # MARK
+                # # Delete the excel file if the data has been processed
+                # os.remove(filename)
+
+                # Further handling for quarter data
+                quarter_data = data.copy()
+
+                # Save income statement cumulative value as it is
+                quarter_data["income_stmt_metrics_cumulative"] = (
+                    json.dumps(quarter_data["income_stmt_metrics"])
+                    if (quarter_data["income_stmt_metrics"] is not None)
+                    else None
+                )
+                # Save cash flow cumulative value as it is
+                quarter_data["cash_flow_metrics_cumulative"] = (
+                    json.dumps(quarter_data["cash_flow_metrics"])
+                    if (quarter_data["cash_flow_metrics"] is not None)
+                    else None
+                )
+
+                # Process the difference for income statement data
+                if period_arg != "tw1":
+                    prev_period_arg_mapping = {
+                        "audit": "tw3",
+                        "tw3": "tw2",
+                        "tw2": "tw1",
+                    }
+
+                    # Doing subtraction since a quarter Q needs to be subtracted with previous Q
+                    prev_period_arg = prev_period_arg_mapping[period_arg]
+                    prev_period_date = date_format(prev_period_arg, year_arg)
+                    prev_quarter_data = (
+                        supabase_client.table("idx_financial_sheets_quarterly")
+                        .select("income_stmt_metrics_cumulative", "cash_flow_metrics_cumulative")
+                        .eq("date", prev_period_date)
+                        .eq("symbol", symbol)
+                        .execute()
+                    ).data
+
+
+                    # Subtract if the data exist for income statement
+                    if (
+                        len(prev_quarter_data) > 0
+                        and quarter_data["income_stmt_metrics"] is not None
+                        and prev_quarter_data[0]['income_stmt_metrics_cumulative'] is not None
+                    ):
+                        prev_income_statement_data = prev_quarter_data[
+                            0
+                        ]["income_stmt_metrics_cumulative"]
+                        for key, value in quarter_data[
+                            "income_stmt_metrics"
+                        ].items():
+                            if key != "diluted_shares_outstanding":  # Exception
+                                if key in prev_income_statement_data:
+                                    prev_val = prev_income_statement_data[key]
+                                    quarter_data["income_stmt_metrics"][key] = (
+                                        none_handling_operation(
+                                            value, prev_val, "-", False
+                                        )
+                                    )
+                    else:
+                        quarter_data["income_stmt_metrics"] = None
+                        print(
+                            f"[NOT FOUND] Income Statement Data for {symbol} with date {prev_period_date} is not found!"
+                        )
+                    
+                    # Subtract if the data exist for cash flow
+                    if (
+                        len(prev_quarter_data) > 0
+                        and quarter_data["cash_flow_metrics"] is not None
+                        and prev_quarter_data[0]['cash_flow_metrics_cumulative'] is not None
+
+                    ):
+                        prev_cash_flow_data = prev_quarter_data[
+                            0
+                        ]["cash_flow_metrics_cumulative"]
+                        for key, value in quarter_data[
+                            "cash_flow_metrics"
+                        ].items():
+                            if key in prev_cash_flow_data:
+                                prev_val = prev_cash_flow_data[key]
+                                quarter_data["cash_flow_metrics"][key] = (
+                                    none_handling_operation(
+                                        value, prev_val, "-", False
+                                    )
+                                )
+                    else:
+                        quarter_data["cash_flow_metrics"] = None
+                        print(
+                            f"[NOT FOUND] Cash Flow Data for {symbol} with date {prev_period_date} is not found!"
+                        )
+
+                    
+
+                # Dumps data to jsonb
+                quarter_data["balance_sheet_metrics"] = (
+                    json.dumps(quarter_data["balance_sheet_metrics"])
+                    if (quarter_data["balance_sheet_metrics"] is not None)
+                    else None
+                )
+                quarter_data["income_stmt_metrics"] = (
+                    json.dumps(quarter_data["income_stmt_metrics"])
+                    if (quarter_data["income_stmt_metrics"] is not None)
+                    else None
+                )
+                quarter_data["cash_flow_metrics"] = (
+                    json.dumps(quarter_data["cash_flow_metrics"])
+                    if (quarter_data["cash_flow_metrics"] is not None)
+                    else None
+                )
+
+                # Insert all the data in current_symbol_list_data to result_data_list
+                result_data_list_quarter.append(quarter_data)
+
+            else:
+                print(f"[FAILED] Failed to open and process {filename}")
+                failed_entry = {
+                    "symbol": symbol,
+                    "year": year_arg,
+                    "period": period_arg,
+                    "error_message": "Unable to open file",
+                }
+                failed_list.append(failed_entry)
+
+        except Exception as e:
+            print(f"[FAILED] Failed to open and process {filename} : {e}")
+            failed_entry = {
+                "symbol": symbol,
+                "year": year_arg,
+                "period": period_arg,
+                "error_message": e,
+            }
+            failed_list.append(failed_entry)
+
 
     # Put to queue
     shared_list.append((result_data_list_quarter, result_data_list_annual, failed_list))
