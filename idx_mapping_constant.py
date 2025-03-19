@@ -135,9 +135,8 @@ GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
     "Total profit (loss) before tax": "pretax_income",
     "Tax benefit (expenses)": "income_taxes",
     "Profit (loss) attributable to non-controlling interests": "minorities",
-    "Profit (loss) attributable to parent entity": "net_income",
+    "Profit (loss) attributable to parent entity": ["net_income", "profit_attributable_to_parent"],
     "Interest and finance costs": "interest_expense_non_operating",
-    "Profit (loss) attributable to parent entity" : "profit_attributable_to_parent",
     "Basic earnings (loss) per share from continuing operations" : "basic_earnings_from_continuing_operations",
 }
 GENERAL_CASH_FLOW_SHEET_CODE = ["1510000"]
