@@ -285,6 +285,10 @@ if __name__ == "__main__":
             quarterly_data,
             ignore_duplicates=False
           ).execute()
+
+          inserted_symbol_list = df['symbol'].tolist()
+          logging.info(f"[RESULT] Successfully insert {len(inserted_symbol_list)} quarter companies data to Database. Values: {inserted_symbol_list}.")
+
         except Exception as e:
           print(f"[FAILED] Failed to upsert quarter to Database: {e}")
 
@@ -313,6 +317,10 @@ if __name__ == "__main__":
             annual_data,
             ignore_duplicates=False
           ).execute()
+
+          inserted_symbol_list = df['symbol'].tolist()
+          logging.info(f"[RESULT] Successfully insert {len(inserted_symbol_list)} annual companies data to Database. Values: {inserted_symbol_list}.")
+
         except Exception as e:
           print(f"[FAILED] Failed to upsert annual to Database: {e}")
 
