@@ -1,0 +1,6 @@
+2025-03-25 10:31:57,737 - INFO: [INITIATE] The program has started to extract quarter audit and year 2024 data
+2025-03-25 10:31:58,588 - INFO: [BATCH PROCESS] Finding batch process (arg: 1) for company index 0 to 238
+2025-03-25 10:31:59,404 - INFO: [SELECTION PROCESS] After selection process, amount of companies that will be scraped is 174
+2025-03-25 12:34:58,063 - INFO: [PROGRESS] Processing execution has finished taking duration of 02:02:58.
+2025-03-25 12:34:58,894 - INFO: [RESULT] Successfully insert 1 quarter companies data to Database. Values: ['BOBA.JK'].
+2025-03-25 12:34:59,732 - INFO: [RESULT] Successfully insert 1 annual companies data to Database. Values: ['BOBA.JK'].
