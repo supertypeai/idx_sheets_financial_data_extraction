@@ -53,3 +53,7 @@
 2025-05-13 00:55:55,386 - INFO: [BATCH PROCESS] Finding batch process (arg: 1) for company index 0 to 239
 2025-05-13 00:55:56,024 - INFO: [SELECTION PROCESS] After selection process, amount of companies that will be scraped is 239
 2025-05-13 01:18:33,846 - INFO: [PROGRESS] Processing execution has finished taking duration of 00:22:37.
+2025-05-14 01:09:54,131 - INFO: [INITIATE] The program has started to extract quarter tw2 and year 2025 data
+2025-05-14 01:09:54,978 - INFO: [BATCH PROCESS] Finding batch process (arg: 2) for company index 239 to 478
+2025-05-14 01:09:55,642 - INFO: [SELECTION PROCESS] After selection process, amount of companies that will be scraped is 239
+2025-05-14 01:37:44,191 - INFO: [PROGRESS] Processing execution has finished taking duration of 00:27:48.
