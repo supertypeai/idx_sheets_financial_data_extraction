@@ -225,6 +225,35 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
+                balance_sheet_dict["inventories"] = none_handling_operation(
+                    none_handling_operation(
+                        sum_value_equal(
+                            df,
+                            ["Current livestock inventories"],
+                            rounding_val,
+                        ),
+                        sum_value_equal(
+                            df,
+                            ["Current real estate assets"],
+                            rounding_val,
+                        ),
+                        "+",
+                        True,
+                    ),
+                    sum_value_equal(
+                        df,
+                        ["Current inventories"],
+                        rounding_val,
+                    ),
+                    "+",
+                    True,
+                )
+                if balance_sheet_dict["prepaid_expenses"] == None:
+                    balance_sheet_dict["prepaid_expenses"] = sum_value_equal(
+                        df,
+                        ["Prepaid expenses"],
+                        rounding_val,
+                    )
 
             elif industry_key_idx == 2:  # Property
                 balance_sheet_dict["cash_and_short_term_investments"] = sum_value_equal(
@@ -257,6 +286,26 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
+                balance_sheet_dict["inventories"] = none_handling_operation(
+                    sum_value_equal(
+                        df,
+                        ["Current real estate assets"],
+                        rounding_val,
+                    ),
+                    sum_value_equal(
+                        df,
+                        ["Current inventories"],
+                        rounding_val,
+                    ),
+                    "+",
+                    True,
+                )
+                if balance_sheet_dict["prepaid_expenses"] == None:
+                    balance_sheet_dict["prepaid_expenses"] = sum_value_equal(
+                        df,
+                        ["Prepaid expenses"],
+                        rounding_val,
+                    )
 
             elif industry_key_idx == 3:  # Infrastructure
                 balance_sheet_dict["cash_and_short_term_investments"] = sum_value_equal(
@@ -289,6 +338,26 @@ def process_balance_sheet(
                     "+",
                     True,
                 )
+                balance_sheet_dict["inventories"] = none_handling_operation(
+                    sum_value_equal(
+                        df,
+                        ["Current real estate assets"],
+                        rounding_val,
+                    ),
+                    sum_value_equal(
+                        df,
+                        ["Current inventories"],
+                        rounding_val,
+                    ),
+                    "+",
+                    True,
+                )
+                if balance_sheet_dict["prepaid_expenses"] == None:
+                    balance_sheet_dict["prepaid_expenses"] = sum_value_equal(
+                        df,
+                        ["Prepaid expenses"],
+                        rounding_val,
+                    )
 
             elif industry_key_idx == 4:  # Finance and Sharia
                 balance_sheet_dict["gross_loan"] = sum_value_equal(

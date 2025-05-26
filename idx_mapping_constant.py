@@ -126,6 +126,8 @@ GENERAL_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Current prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
 }
 GENERAL_INCOME_STATEMENT_SHEET_CODE = ["1311000", "1321000", "1312000", "1322000"]
 GENERAL_INCOME_STATEMENT_COLUMN_MAPPING = {
@@ -163,7 +165,9 @@ PROPERTY_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
-}
+    "Current prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
+    }
 PROPERTY_INCOME_STATEMENT_SHEET_CODE = [
     "2311000",
     "1321000",
@@ -207,6 +211,8 @@ INFRASTRUCTURE_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Current prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
 }
 INFRASTRUCTURE_INCOME_STATEMENT_SHEET_CODE = [
     "3311000",
@@ -250,6 +256,8 @@ FINANCE_SHARIA_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
     "Cash": "cash_only",
 }
 FINANCE_SHARIA_INCOME_STATEMENT_SHEET_CODE = ["4322000", "4312000"]
@@ -283,6 +291,9 @@ SECURITIES_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
+    "Cash": "cash_only",
 }
 SECURITIES_INCOME_STATEMENT_SHEET_CODE = ["5311000", "5321000", "5322000", "5312000"]
 SECURITIES_INCOME_STATEMENT_COLUMN_MAPPING = {
@@ -312,6 +323,8 @@ INSURANCE_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
 }
 INSURANCE_INCOME_STATEMENT_SHEET_CODE = ["6312000", "6322000", "6311000", "6321000"]
 INSURANCE_INCOME_STATEMENT_COLUMN_MAPPING = {
@@ -342,6 +355,8 @@ FINANCING_BALANCE_SHEET_COLUMN_MAPPING = {
     "Total liabilities": "total_liabilities",
     "Total equity": "total_equity",
     "Total equity attributable to equity owners of parent entity": "stockholders_equity",
+    "Prepaid expenses": "prepaid_expenses",
+    "Unappropriated retained earnings": "retained_earnings",
 }
 FINANCING_INCOME_STATEMENT_SHEET_CODE = ["8312000", "8322000", "8321000", "8311000"]
 FINANCING_INCOME_STATEMENT_COLUMN_MAPPING = {
