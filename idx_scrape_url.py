@@ -14,7 +14,7 @@ _FILE_PERIOD_MAP = {
 
 def generate_url(symbol: str, year: int, period: str):
     symbol = symbol.replace(".JK", "")
-    formatted_period = period.lower().capitalize()
+    formatted_period = period  # Keep original format (tw1, tw2, tw3, audit)
     file_period = _FILE_PERIOD_MAP[period]
     return f"/Portals/0/StaticData/ListedCompanies/Corporate_Actions/New_Info_JSX/Jenis_Informasi/01_Laporan_Keuangan/02_Soft_Copy_Laporan_Keuangan//Laporan Keuangan Tahun {year}/{formatted_period}/{symbol}/FinancialStatement-{year}-{file_period}-{symbol}.xlsx"
 

@@ -22,8 +22,9 @@ USER_AGENT_LIST = [USER_AGENT, USER_AGENT_ALT_1, USER_AGENT_ALT_2]
 
 HEADERS = {
     "User-Agent": USER_AGENT,
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
@@ -31,6 +32,8 @@ HEADERS = {
     "Sec-Fetch-Site": "none",
     "Sec-Fetch-User": "?1",
     "Cache-Control": "max-age=0",
+    "DNT": "1",
+    "Referer": "https://www.idx.co.id/",
 }
 
 
@@ -47,6 +50,17 @@ def create_headers():
 _SUPABASE_URL = os.getenv("SUPABASE_URL")
 _SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase_client = create_client(_SUPABASE_URL, _SUPABASE_KEY)
+
+# Check if running in local environment (not GitHub Actions)
+def is_local_environment():
+    """Check if running locally vs GitHub Actions"""
+    return os.getenv("GITHUB_ACTIONS") != "true"
+
+# Get proxy setting for local development
+def should_use_proxy():
+    """Determine if proxy should be used based on environment"""
+    use_proxy_env = os.getenv("USE_PROXY_LOCAL", "false").lower()
+    return is_local_environment() and use_proxy_env == "true"
 
 # Change period and year to date format
 def date_format(period: str, year: str):

@@ -9,7 +9,8 @@ from idx_utils import (
     PERIOD_LIST,
     DATA_DIR,
     supabase_client,
-    date_format
+    date_format,
+    is_local_environment
 )
 from datetime import datetime, timedelta
 import logging
@@ -175,21 +176,28 @@ if __name__ == "__main__":
     # # DOWNLOAD AND EXCEL PROCESS
     # ##############################
 
-    # Use multiprocess to increase efficiency
+    # Use multiprocess to increase efficiency (disabled for local debugging)
     all_data = pd.DataFrame({"symbol": symbol_list, "year": year_arg, "period": period_arg})
     all_data["file_name"] = all_data.apply(lambda x: generate_filename(x.symbol, x.year, x.period), axis=1)
     all_data["file_url"] = all_data.apply(lambda x: generate_url(x.symbol, x.year, x.period), axis=1)
     all_data["period"] = "tw4" if period_arg == "audit" else period_arg
 
+    # Using multiprocessing sharedlist
+    shared_list = manager.list()
+
+    # # Check if running in local environment - use sequential processing to avoid 403 errors
+    # if is_local_environment():
+    #     print("[LOCAL] Running in local environment - using sequential processing to avoid rate limiting")
+    #     # Process sequentially for local debugging
+    #     process_dataframe(all_data, period_arg, year_arg, shared_list, 1)
+    # else:
+    print("[PRODUCTION] Running in production environment - using multiprocessing")
     length_list = len(all_data)
     i1 = int(length_list / 4)
     i2 = 2 * i1
     i3 = 3 * i1
 
-    # Using multiprocessing sharedlist
-    shared_list = manager.list()
-
-    # Process Program
+    # Process Program with multiprocessing
     # [LOOK] idx_process.py
     p1 = Process(
         target=process_dataframe,
@@ -280,6 +288,10 @@ if __name__ == "__main__":
                     'cash_flow_metrics_cumulative' : json.loads(record['cash_flow_metrics_cumulative']) if record['cash_flow_metrics_cumulative'] is not None else None
                 }
             )
+        # # DEBUGGING: Upsert to Supabase is temporarily disabled for local debugging
+        # print(f"[DEBUG] Would upsert {len(quarterly_data)} quarterly records to Supabase")
+        # print(f"[DEBUG] Sample data: {quarterly_data[0] if quarterly_data else 'No data'}")
+        
         try:
           response = supabase_client.table("idx_financial_sheets_quarterly").upsert(
             quarterly_data,
@@ -292,7 +304,7 @@ if __name__ == "__main__":
         except Exception as e:
           print(f"[FAILED] Failed to upsert quarter to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+        # print(f"[DEBUG] Successfully processed {len(data_dict)} quarterly data (not inserted to database)")
 
     if (len(annual_results) > 0):
         df = pd.DataFrame(annual_results)
@@ -312,6 +324,10 @@ if __name__ == "__main__":
                 }
             )
 
+        # # DEBUGGING: Upsert to Supabase is temporarily disabled for local debugging
+        # print(f"[DEBUG] Would upsert {len(annual_data)} annual records to Supabase")
+        # print(f"[DEBUG] Sample data: {annual_data[0] if annual_data else 'No data'}")
+        
         try:
           response = supabase_client.table("idx_financial_sheets_annual").upsert(
             annual_data,
@@ -324,5 +340,5 @@ if __name__ == "__main__":
         except Exception as e:
           print(f"[FAILED] Failed to upsert annual to Database: {e}")
 
-        print(f"[SUCCESS] Successfully insert {len(data_dict)} data to database")
+        # print(f"[DEBUG] Successfully processed {len(data_dict)} annual data (not inserted to database)")
 

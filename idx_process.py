@@ -11,7 +11,9 @@ from idx_utils import (
     supabase_client,
     date_format,
     none_handling_operation,
-    get_rate
+    get_rate,
+    is_local_environment,
+    should_use_proxy
 )
 import warnings
 import urllib.request
@@ -50,6 +52,69 @@ def rounding_calc_and_check(num: int, rounding_val: float):
         return float(num)
     else:
         return none_handling_operation(float(num), rounding_val, "*", False)
+
+def _fetch_prev_year_data(symbol: str, period: str, year: int):
+    try:
+        prev_year = int(year) - 1
+        adjusted_period = "tw4" if period == "tw4" or period == "audit" else period
+        prev_date = date_format(adjusted_period, prev_year)
+
+        table = "idx_financial_sheets_annual" if adjusted_period == "tw4" else "idx_financial_sheets_quarterly"
+
+        resp = (
+            supabase_client
+            .table(table)
+            .select("balance_sheet_metrics,income_stmt_metrics,cash_flow_metrics")
+            .eq("symbol", symbol)
+            .eq("date", prev_date)
+            .execute()
+        )
+        data = resp.data if hasattr(resp, "data") else []
+        if not data:
+            return {}
+        row = data[0]
+        return {
+            "balance_sheet_metrics": row.get("balance_sheet_metrics") or {},
+            "income_stmt_metrics": row.get("income_stmt_metrics") or {},
+            "cash_flow_metrics": row.get("cash_flow_metrics") or {},
+        }
+    except Exception:
+        return {}
+
+
+def _relative_diff(curr: float, prev: float) -> float:
+    try:
+        if curr is None or prev is None:
+            return None
+        denom = abs(prev) if abs(prev) > 1e-9 else 1.0
+        return abs(curr - prev) / denom
+    except Exception:
+        return None
+
+# Average relative difference score between current and previous-year metrics (lower is better).
+def _score_against_previous(curr_dicts: dict, prev_dicts: dict) -> float:
+    keys_bs = ["total_asset", "total_equity", "total_liabilities", "total_debt"]
+    keys_is = ["total_revenue", "net_income", "operating_income", "ebit"]
+    keys_cf = ["operating_cash_flow", "free_cash_flow"]
+
+    sections = [
+        ("balance_sheet_metrics", keys_bs),
+        ("income_stmt_metrics", keys_is),
+        ("cash_flow_metrics", keys_cf),
+    ]
+
+    diffs = []
+    for section, keys in sections:
+        curr = (curr_dicts or {}).get(section) or {}
+        prev = (prev_dicts or {}).get(section) or {}
+        for k in keys:
+            if k in curr and k in prev:
+                d = _relative_diff(curr.get(k), prev.get(k))
+                if d is not None:
+                    diffs.append(d)
+    if not diffs:
+        return float("inf")
+    return float(sum(diffs) / len(diffs))
 
 
 # Used to get the data value where the column name is contained within the list
@@ -950,24 +1015,50 @@ def process_cash_flow(
 def download_excel_file(url: str, filename: str, use_proxy: bool = False):
     try:
         print(f"[DOWNLOAD] Downloading from {url}")
+        
+        # Auto-detect if should use proxy in local environment
+        if is_local_environment() and not use_proxy:
+            print("[LOCAL] Running in local environment, attempting direct download first...")
+            use_proxy = False  # Try direct first
+        
+        # Add delay to avoid rate limiting
+        time.sleep(2)
 
         if not use_proxy:
-            # Construct the request
-            req = urllib.request.Request(url, headers=create_headers())
+            try:
+                # Construct the request
+                req = urllib.request.Request(url, headers=create_headers())
 
-            # Open the request and write the response to a file
-            response = urllib.request.urlopen(req)
-            out_file = open(filename, "wb")
-
-            if int(response.getcode()) == 200:
-                data = response.read()  # Read the response data
-                out_file.write(data)  # Write the data to a file
-            else:
-                print(f"[FAILED] Failed to get data status code {response.getcode()}")
+                # Open the request and write the response to a file
+                response = urllib.request.urlopen(req)
+                
+                if int(response.getcode()) == 200:
+                    with open(filename, "wb") as out_file:
+                        data = response.read()  # Read the response data
+                        out_file.write(data)  # Write the data to a file
+                    print(f"[SUCCESS] Successfully downloaded {filename}")
+                    return True
+                else:
+                    print(f"[FAILED] Failed to get data status code {response.getcode()}")
+                    # If failed and in local environment, try with proxy
+                    if is_local_environment():
+                        print("[LOCAL] Direct download failed, trying with proxy...")
+                        return download_excel_file(url, filename, use_proxy=True)
+                    return False
+                    
+            except urllib.request.HTTPError as httper:
+                if httper.getcode() == 403 and is_local_environment():
+                    print(f"[LOCAL] Got 403 error, trying with proxy...")
+                    return download_excel_file(url, filename, use_proxy=True)
+                else:
+                    print(f"[FAILED] Failed to download excel file for {filename}: {httper}")
+                    return httper.getcode() == 404
 
         else:
+            print("[PROXY] Using proxy for download...")
             response = requests.get(
-                url, allow_redirects=True, proxies=PROXIES, verify=False
+                url, allow_redirects=True, proxies=PROXIES, verify=False, 
+                headers=create_headers(), timeout=30
             )
 
             if int(response.status_code) == 200:
@@ -975,13 +1066,12 @@ def download_excel_file(url: str, filename: str, use_proxy: bool = False):
                 with open(filename, "wb") as out_file:
                     for chunk in response.iter_content(chunk_size=8192):
                         out_file.write(chunk)
+                print(f"[SUCCESS] Successfully downloaded {filename} via proxy")
+                return True
             else:
-                print(f"[FAILED] Failed to get data status code {response.status_code}")
+                print(f"[FAILED] Failed to get data via proxy, status code {response.status_code}")
+                return False
 
-        return True
-    except urllib.request.HTTPError as httper:
-        print(f"[FAILED] Failed to download excel file for {filename}: {httper}")
-        return httper.getcode() == 404
     except Exception as e:
         print(f"[FAILED] Failed to download excel file for {filename}: {e}")
         return False
@@ -1058,44 +1148,102 @@ def process_excel(
             f"[PROCESS P{process}] Processing {symbol} date {date} industry_key {industry_key_idx}..."
         )
 
-        # Process each data
-        print(f"[BS P{process}] Processing Balance Sheet ...")
-        balance_sheet_data = process_balance_sheet(
-            filename,
-            mapping_dict["bs_sheet_code"],
-            mapping_dict["bs_column_mapping"],
-            mapping_dict["bs_metrics"],
-            rounding_val,
-            currency_rate, 
-            industry_key_idx,
-        )
-        print(f"[IS P{process}] Processing Income Statement ...")
-        income_statement_data = process_income_statement(
-            filename,
-            mapping_dict["is_sheet_code"],
-            mapping_dict["is_column_mapping"],
-            mapping_dict["is_metrics"],
-            rounding_val,
-            currency_rate, 
-            industry_key_idx,
-        )
-        print(f"[CF P{process}] Processing Cash Flow ...")
-        cash_flow_data = process_cash_flow(
-            filename,
-            mapping_dict["cf_sheet_code"],
-            mapping_dict["cf_column_mapping"],
-            mapping_dict["cf_metrics"],
-            rounding_val,
-            currency_rate, 
-            industry_key_idx,
-        )
+        # Process each data with historical-based rounding selection
+        prev_data = _fetch_prev_year_data(symbol, period, year)
+        candidate_roundings = []
+        for r in [rounding_val, 1, 1e3, 1e6, 1e9, 1e12]:
+            if r not in candidate_roundings:
+                candidate_roundings.append(r)
+
+        best_tuple = None  # (bs, is, cf, chosen_rounding, score)
+        if prev_data:
+            # Try multiple rounding candidates and pick the smallest YoY difference
+            for cand_r in candidate_roundings:
+                try:
+                    bs_data = process_balance_sheet(
+                        filename,
+                        mapping_dict["bs_sheet_code"],
+                        mapping_dict["bs_column_mapping"],
+                        mapping_dict["bs_metrics"],
+                        cand_r,
+                        currency_rate,
+                        industry_key_idx,
+                    )
+                    is_data = process_income_statement(
+                        filename,
+                        mapping_dict["is_sheet_code"],
+                        mapping_dict["is_column_mapping"],
+                        mapping_dict["is_metrics"],
+                        cand_r,
+                        currency_rate,
+                        industry_key_idx,
+                    )
+                    cf_data = process_cash_flow(
+                        filename,
+                        mapping_dict["cf_sheet_code"],
+                        mapping_dict["cf_column_mapping"],
+                        mapping_dict["cf_metrics"],
+                        cand_r,
+                        currency_rate,
+                        industry_key_idx,
+                    )
+                    curr_dicts = {
+                        "balance_sheet_metrics": bs_data,
+                        "income_stmt_metrics": is_data,
+                        "cash_flow_metrics": cf_data,
+                    }
+                    score = _score_against_previous(curr_dicts, prev_data)
+                    if best_tuple is None or score < best_tuple[4]:
+                        best_tuple = (bs_data, is_data, cf_data, cand_r, score)
+                except Exception:
+                    # Skip candidate on error
+                    continue
+
+        if best_tuple is not None:
+            balance_sheet_data, income_statement_data, cash_flow_data, chosen_rounding, score = best_tuple
+            if chosen_rounding != rounding_val:
+                print(
+                    f"[MULTIPLIER P{process}] Override rounding {rounding_val} -> {chosen_rounding} for {symbol} {period} {year} (YoY score={score:.4f})"
+                )
+        else:
+            # Fallback to detected rounding only
+            chosen_rounding = rounding_val
+            print(f"[MULTIPLIER P{process}] Using detected rounding {rounding_val} (no YoY reference)")
+            balance_sheet_data = process_balance_sheet(
+                filename,
+                mapping_dict["bs_sheet_code"],
+                mapping_dict["bs_column_mapping"],
+                mapping_dict["bs_metrics"],
+                chosen_rounding,
+                currency_rate,
+                industry_key_idx,
+            )
+            income_statement_data = process_income_statement(
+                filename,
+                mapping_dict["is_sheet_code"],
+                mapping_dict["is_column_mapping"],
+                mapping_dict["is_metrics"],
+                chosen_rounding,
+                currency_rate,
+                industry_key_idx,
+            )
+            cash_flow_data = process_cash_flow(
+                filename,
+                mapping_dict["cf_sheet_code"],
+                mapping_dict["cf_column_mapping"],
+                mapping_dict["cf_metrics"],
+                chosen_rounding,
+                currency_rate,
+                industry_key_idx,
+            )
+
         print(f"[ADD P{process}] Processing Additional Metrics ...")
         additional_data = process_additional_metrics(
             filename,
             mapping_dict["additional_mapping"],
             income_statement_data,
-            rounding_val,
-            currency_rate, 
+            chosen_rounding,
+            currency_rate,
             industry_key_idx,
         )
 
@@ -1161,7 +1309,9 @@ def process_dataframe(
         limit_attempts = 3
         download_return = False
         while attempt <= limit_attempts and not download_return:
-            download_return = download_excel_file(url, filename, True)
+            # Use different proxy settings for local vs production
+            use_proxy_setting = not is_local_environment()  # False for local, True for production
+            download_return = download_excel_file(url, filename, use_proxy_setting)
             attempt += 1
             if not download_return:
                 if attempt > limit_attempts:
