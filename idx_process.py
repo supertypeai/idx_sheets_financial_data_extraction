@@ -53,68 +53,68 @@ def rounding_calc_and_check(num: int, rounding_val: float):
     else:
         return none_handling_operation(float(num), rounding_val, "*", False)
 
-def _fetch_prev_year_data(symbol: str, period: str, year: int):
-    try:
-        prev_year = int(year) - 1
-        adjusted_period = "tw4" if period == "tw4" or period == "audit" else period
-        prev_date = date_format(adjusted_period, prev_year)
+# def _fetch_prev_year_data(symbol: str, period: str, year: int):
+#     try:
+#         prev_year = int(year) - 1
+#         adjusted_period = "tw4" if period == "tw4" or period == "audit" else period
+#         prev_date = date_format(adjusted_period, prev_year)
 
-        table = "idx_financial_sheets_annual" if adjusted_period == "tw4" else "idx_financial_sheets_quarterly"
+#         table = "idx_financial_sheets_annual" if adjusted_period == "tw4" else "idx_financial_sheets_quarterly"
 
-        resp = (
-            supabase_client
-            .table(table)
-            .select("balance_sheet_metrics,income_stmt_metrics,cash_flow_metrics")
-            .eq("symbol", symbol)
-            .eq("date", prev_date)
-            .execute()
-        )
-        data = resp.data if hasattr(resp, "data") else []
-        if not data:
-            return {}
-        row = data[0]
-        return {
-            "balance_sheet_metrics": row.get("balance_sheet_metrics") or {},
-            "income_stmt_metrics": row.get("income_stmt_metrics") or {},
-            "cash_flow_metrics": row.get("cash_flow_metrics") or {},
-        }
-    except Exception:
-        return {}
+#         resp = (
+#             supabase_client
+#             .table(table)
+#             .select("balance_sheet_metrics,income_stmt_metrics,cash_flow_metrics")
+#             .eq("symbol", symbol)
+#             .eq("date", prev_date)
+#             .execute()
+#         )
+#         data = resp.data if hasattr(resp, "data") else []
+#         if not data:
+#             return {}
+#         row = data[0]
+#         return {
+#             "balance_sheet_metrics": row.get("balance_sheet_metrics") or {},
+#             "income_stmt_metrics": row.get("income_stmt_metrics") or {},
+#             "cash_flow_metrics": row.get("cash_flow_metrics") or {},
+#         }
+#     except Exception:
+#         return {}
 
 
-def _relative_diff(curr: float, prev: float) -> float:
-    try:
-        if curr is None or prev is None:
-            return None
-        denom = abs(prev) if abs(prev) > 1e-9 else 1.0
-        return abs(curr - prev) / denom
-    except Exception:
-        return None
+# def _relative_diff(curr: float, prev: float) -> float:
+#     try:
+#         if curr is None or prev is None:
+#             return None
+#         denom = abs(prev) if abs(prev) > 1e-9 else 1.0
+#         return abs(curr - prev) / denom
+#     except Exception:
+#         return None
 
-# Average relative difference score between current and previous-year metrics (lower is better).
-def _score_against_previous(curr_dicts: dict, prev_dicts: dict) -> float:
-    keys_bs = ["total_asset", "total_equity", "total_liabilities", "total_debt"]
-    keys_is = ["total_revenue", "net_income", "operating_income", "ebit"]
-    keys_cf = ["operating_cash_flow", "free_cash_flow"]
+# # Average relative difference score between current and previous-year metrics (lower is better).
+# def _score_against_previous(curr_dicts: dict, prev_dicts: dict) -> float:
+#     keys_bs = ["total_asset", "total_equity", "total_liabilities", "total_debt"]
+#     keys_is = ["total_revenue", "net_income", "operating_income", "ebit"]
+#     keys_cf = ["operating_cash_flow", "free_cash_flow"]
 
-    sections = [
-        ("balance_sheet_metrics", keys_bs),
-        ("income_stmt_metrics", keys_is),
-        ("cash_flow_metrics", keys_cf),
-    ]
+#     sections = [
+#         ("balance_sheet_metrics", keys_bs),
+#         ("income_stmt_metrics", keys_is),
+#         ("cash_flow_metrics", keys_cf),
+#     ]
 
-    diffs = []
-    for section, keys in sections:
-        curr = (curr_dicts or {}).get(section) or {}
-        prev = (prev_dicts or {}).get(section) or {}
-        for k in keys:
-            if k in curr and k in prev:
-                d = _relative_diff(curr.get(k), prev.get(k))
-                if d is not None:
-                    diffs.append(d)
-    if not diffs:
-        return float("inf")
-    return float(sum(diffs) / len(diffs))
+#     diffs = []
+#     for section, keys in sections:
+#         curr = (curr_dicts or {}).get(section) or {}
+#         prev = (prev_dicts or {}).get(section) or {}
+#         for k in keys:
+#             if k in curr and k in prev:
+#                 d = _relative_diff(curr.get(k), prev.get(k))
+#                 if d is not None:
+#                     diffs.append(d)
+#     if not diffs:
+#         return float("inf")
+#     return float(sum(diffs) / len(diffs))
 
 
 # Used to get the data value where the column name is contained within the list
@@ -682,14 +682,14 @@ def process_income_statement(
             elif industry_key_idx == 4:  # Finance and Sharia
                 income_statement_dict["net_interest_income"] = none_handling_operation(
                     income_statement_dict["interest_income"],
-                    income_statement_dict["interest_expense"],
-                    "+",
+                    abs(income_statement_dict["interest_expense"]),
+                    "-",
                     True,
                 )
                 income_statement_dict["net_premium_income"] = none_handling_operation(
                     income_statement_dict["premium_income"],
                     income_statement_dict["premium_expense"],
-                    "+",
+                    "-",
                     True,
                 )
                 income_statement_dict["non_interest_income"] = sum_value_range(
@@ -1148,101 +1148,134 @@ def process_excel(
             f"[PROCESS P{process}] Processing {symbol} date {date} industry_key {industry_key_idx}..."
         )
 
-        # Process each data with historical-based rounding selection
-        prev_data = _fetch_prev_year_data(symbol, period, year)
-        candidate_roundings = []
-        for r in [rounding_val, 1, 1e3, 1e6, 1e9, 1e12]:
-            if r not in candidate_roundings:
-                candidate_roundings.append(r)
+        # Process each data
+        print(f"[BS P{process}] Processing Balance Sheet ...")
+        balance_sheet_data = process_balance_sheet(
+            filename,
+            mapping_dict["bs_sheet_code"],
+            mapping_dict["bs_column_mapping"],
+            mapping_dict["bs_metrics"],
+            rounding_val,
+            currency_rate, 
+            industry_key_idx,
+        )
+        print(f"[IS P{process}] Processing Income Statement ...")
+        income_statement_data = process_income_statement(
+            filename,
+            mapping_dict["is_sheet_code"],
+            mapping_dict["is_column_mapping"],
+            mapping_dict["is_metrics"],
+            rounding_val,
+            currency_rate, 
+            industry_key_idx,
+        )
+        print(f"[CF P{process}] Processing Cash Flow ...")
+        cash_flow_data = process_cash_flow(
+            filename,
+            mapping_dict["cf_sheet_code"],
+            mapping_dict["cf_column_mapping"],
+            mapping_dict["cf_metrics"],
+            rounding_val,
+            currency_rate, 
+            industry_key_idx,
+        )
 
-        best_tuple = None  # (bs, is, cf, chosen_rounding, score)
-        if prev_data:
-            # Try multiple rounding candidates and pick the smallest YoY difference
-            for cand_r in candidate_roundings:
-                try:
-                    bs_data = process_balance_sheet(
-                        filename,
-                        mapping_dict["bs_sheet_code"],
-                        mapping_dict["bs_column_mapping"],
-                        mapping_dict["bs_metrics"],
-                        cand_r,
-                        currency_rate,
-                        industry_key_idx,
-                    )
-                    is_data = process_income_statement(
-                        filename,
-                        mapping_dict["is_sheet_code"],
-                        mapping_dict["is_column_mapping"],
-                        mapping_dict["is_metrics"],
-                        cand_r,
-                        currency_rate,
-                        industry_key_idx,
-                    )
-                    cf_data = process_cash_flow(
-                        filename,
-                        mapping_dict["cf_sheet_code"],
-                        mapping_dict["cf_column_mapping"],
-                        mapping_dict["cf_metrics"],
-                        cand_r,
-                        currency_rate,
-                        industry_key_idx,
-                    )
-                    curr_dicts = {
-                        "balance_sheet_metrics": bs_data,
-                        "income_stmt_metrics": is_data,
-                        "cash_flow_metrics": cf_data,
-                    }
-                    score = _score_against_previous(curr_dicts, prev_data)
-                    if best_tuple is None or score < best_tuple[4]:
-                        best_tuple = (bs_data, is_data, cf_data, cand_r, score)
-                except Exception:
-                    # Skip candidate on error
-                    continue
+        # # Process each data with historical-based rounding selection
+        # prev_data = _fetch_prev_year_data(symbol, period, year)
+        # candidate_roundings = []
+        # for r in [rounding_val, 1, 1e3, 1e6, 1e9, 1e12]:
+        #     if r not in candidate_roundings:
+        #         candidate_roundings.append(r)
 
-        if best_tuple is not None:
-            balance_sheet_data, income_statement_data, cash_flow_data, chosen_rounding, score = best_tuple
-            if chosen_rounding != rounding_val:
-                print(
-                    f"[MULTIPLIER P{process}] Override rounding {rounding_val} -> {chosen_rounding} for {symbol} {period} {year} (YoY score={score:.4f})"
-                )
-        else:
-            # Fallback to detected rounding only
-            chosen_rounding = rounding_val
-            print(f"[MULTIPLIER P{process}] Using detected rounding {rounding_val} (no YoY reference)")
-            balance_sheet_data = process_balance_sheet(
-                filename,
-                mapping_dict["bs_sheet_code"],
-                mapping_dict["bs_column_mapping"],
-                mapping_dict["bs_metrics"],
-                chosen_rounding,
-                currency_rate,
-                industry_key_idx,
-            )
-            income_statement_data = process_income_statement(
-                filename,
-                mapping_dict["is_sheet_code"],
-                mapping_dict["is_column_mapping"],
-                mapping_dict["is_metrics"],
-                chosen_rounding,
-                currency_rate,
-                industry_key_idx,
-            )
-            cash_flow_data = process_cash_flow(
-                filename,
-                mapping_dict["cf_sheet_code"],
-                mapping_dict["cf_column_mapping"],
-                mapping_dict["cf_metrics"],
-                chosen_rounding,
-                currency_rate,
-                industry_key_idx,
-            )
+        # best_tuple = None  # (bs, is, cf, chosen_rounding, score)
+        # if prev_data:
+        #     # Try multiple rounding candidates and pick the smallest YoY difference
+        #     for cand_r in candidate_roundings:
+        #         try:
+        #             bs_data = process_balance_sheet(
+        #                 filename,
+        #                 mapping_dict["bs_sheet_code"],
+        #                 mapping_dict["bs_column_mapping"],
+        #                 mapping_dict["bs_metrics"],
+        #                 cand_r,
+        #                 currency_rate,
+        #                 industry_key_idx,
+        #             )
+        #             is_data = process_income_statement(
+        #                 filename,
+        #                 mapping_dict["is_sheet_code"],
+        #                 mapping_dict["is_column_mapping"],
+        #                 mapping_dict["is_metrics"],
+        #                 cand_r,
+        #                 currency_rate,
+        #                 industry_key_idx,
+        #             )
+        #             cf_data = process_cash_flow(
+        #                 filename,
+        #                 mapping_dict["cf_sheet_code"],
+        #                 mapping_dict["cf_column_mapping"],
+        #                 mapping_dict["cf_metrics"],
+        #                 cand_r,
+        #                 currency_rate,
+        #                 industry_key_idx,
+        #             )
+        #             curr_dicts = {
+        #                 "balance_sheet_metrics": bs_data,
+        #                 "income_stmt_metrics": is_data,
+        #                 "cash_flow_metrics": cf_data,
+        #             }
+        #             score = _score_against_previous(curr_dicts, prev_data)
+        #             if best_tuple is None or score < best_tuple[4]:
+        #                 best_tuple = (bs_data, is_data, cf_data, cand_r, score)
+        #         except Exception:
+        #             # Skip candidate on error
+        #             continue
+
+        # if best_tuple is not None:
+        #     balance_sheet_data, income_statement_data, cash_flow_data, chosen_rounding, score = best_tuple
+        #     if chosen_rounding != rounding_val:
+        #         print(
+        #             f"[MULTIPLIER P{process}] Override rounding {rounding_val} -> {chosen_rounding} for {symbol} {period} {year} (YoY score={score:.4f})"
+        #         )
+        # else:
+        #     # Fallback to detected rounding only
+        #     chosen_rounding = rounding_val
+        #     print(f"[MULTIPLIER P{process}] Using detected rounding {rounding_val} (no YoY reference)")
+        #     balance_sheet_data = process_balance_sheet(
+        #         filename,
+        #         mapping_dict["bs_sheet_code"],
+        #         mapping_dict["bs_column_mapping"],
+        #         mapping_dict["bs_metrics"],
+        #         chosen_rounding,
+        #         currency_rate,
+        #         industry_key_idx,
+        #     )
+        #     income_statement_data = process_income_statement(
+        #         filename,
+        #         mapping_dict["is_sheet_code"],
+        #         mapping_dict["is_column_mapping"],
+        #         mapping_dict["is_metrics"],
+        #         chosen_rounding,
+        #         currency_rate,
+        #         industry_key_idx,
+        #     )
+        #     cash_flow_data = process_cash_flow(
+        #         filename,
+        #         mapping_dict["cf_sheet_code"],
+        #         mapping_dict["cf_column_mapping"],
+        #         mapping_dict["cf_metrics"],
+        #         chosen_rounding,
+        #         currency_rate,
+        #         industry_key_idx,
+        #     )
 
         print(f"[ADD P{process}] Processing Additional Metrics ...")
         additional_data = process_additional_metrics(
             filename,
             mapping_dict["additional_mapping"],
             income_statement_data,
-            chosen_rounding,
+            # chosen_rounding,
+            rounding_val,
             currency_rate,
             industry_key_idx,
         )
